@@ -1,4 +1,5 @@
-const API_URL = "http://127.0.0.1:5000/api";
+// Allow overriding the API URL from the page (useful when frontend is hosted separately)
+const API_URL = window.OPENFORGE_API_URL || "http://127.0.0.1:5000/api";
 
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
@@ -6,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setupIssuePage();
     setupAddProjectForm();
     setupHeroSearch();
+    // initialize custom dropdowns globally for pages with selects marked `filter-control`
+    if (typeof setupCustomDropdowns === 'function') setupCustomDropdowns();
 });
 
 function setupNavigation() {
@@ -13,39 +16,58 @@ function setupNavigation() {
     const toggle = document.querySelector(".nav-toggle");
     const links = document.querySelector(".nav-links");
 
-    if (!nav || !toggle || !links) {
-        return;
-    }
+    if (!nav || !toggle || !links) return;
+
+    let navBackdrop = null;
+
+    const createBackdrop = () => {
+        if (navBackdrop) return;
+        navBackdrop = document.createElement('div');
+        navBackdrop.className = 'nav-backdrop';
+        navBackdrop.tabIndex = -1;
+        document.body.appendChild(navBackdrop);
+        navBackdrop.addEventListener('click', closeMenu);
+    };
+
+    const removeBackdrop = () => {
+        if (!navBackdrop) return;
+        navBackdrop.removeEventListener('click', closeMenu);
+        document.body.removeChild(navBackdrop);
+        navBackdrop = null;
+    };
 
     const closeMenu = () => {
         nav.classList.remove("nav-open");
         links.classList.remove("active");
         toggle.setAttribute("aria-expanded", "false");
+        removeBackdrop();
     };
 
     toggle.addEventListener("click", () => {
         const isOpen = nav.classList.toggle("nav-open");
         links.classList.toggle("active", isOpen);
         toggle.setAttribute("aria-expanded", String(isOpen));
+        if (isOpen) createBackdrop(); else removeBackdrop();
     });
 
-    links.querySelectorAll("a").forEach((link) => {
-        link.addEventListener("click", closeMenu);
-    });
+    links.querySelectorAll("a").forEach(link => link.addEventListener("click", closeMenu));
 
     document.addEventListener("click", (event) => {
-        if (!nav.contains(event.target)) {
+        // only close if menu is open and click occurred outside the nav
+        if (nav.classList.contains('nav-open') && !nav.contains(event.target)) {
             closeMenu();
         }
+    });
+
+    // Close mobile nav on Escape for better keyboard UX
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeMenu();
     });
 }
 
 function setupHeroSearch() {
     const search = document.getElementById("hero-search");
-
-    if (!search) {
-        return;
-    }
+    if (!search) return;
 
     const goToExplore = () => {
         const query = search.value.trim();
@@ -68,10 +90,7 @@ function setupHeroSearch() {
 
 function setupProjectPage() {
     const container = document.getElementById("projects-container");
-
-    if (!container) {
-        return;
-    }
+    if (!container) return;
 
     const search = document.getElementById("project-search");
     const tagFilter = document.getElementById("tag-filter");
@@ -90,9 +109,7 @@ function setupProjectPage() {
     }
 
     [tagFilter, difficultyFilter, sortFilter].forEach((element) => {
-        if (element) {
-            element.addEventListener("change", triggerFetch);
-        }
+        if (element) element.addEventListener("change", triggerFetch);
     });
 
     if (resetButton) {
@@ -116,10 +133,7 @@ function setupProjectPage() {
 
 function setupIssuePage() {
     const container = document.getElementById("issues-container");
-
-    if (!container) {
-        return;
-    }
+    if (!container) return;
 
     const search = document.getElementById("issue-search");
     const resetButton = document.getElementById("reset-issue-filters");
@@ -149,12 +163,7 @@ function setupIssuePage() {
 
 function setupAddProjectForm() {
     const form = document.getElementById("add-project-form");
-
-    if (!form) {
-        return;
-    }
-
-    form.addEventListener("submit", submitProject);
+    if (form) form.addEventListener("submit", submitProject);
 }
 
 function getProjectFilters() {
@@ -168,69 +177,45 @@ function getProjectFilters() {
 
 function setMessage(elementId, text, type) {
     const element = document.getElementById(elementId);
-
-    if (!element) {
-        return;
-    }
+    if (!element) return;
 
     element.textContent = text;
     element.classList.remove("is-success", "is-error");
 
-    if (type === "success") {
-        element.classList.add("is-success");
-    } else if (type === "error") {
-        element.classList.add("is-error");
-    }
+    if (type === "success") element.classList.add("is-success");
+    else if (type === "error") element.classList.add("is-error");
 }
 
 function renderStatusPanel(container, { title, message, variant = "", loading = false }) {
-    if (!container) {
-        return;
-    }
+    if (!container) return;
 
     setContainerBusy(container, loading);
-    const panel = document.createElement("div");
-    panel.className = `status-panel${variant ? ` ${variant}` : ""}`;
-    panel.setAttribute("role", variant === "is-error" ? "alert" : "status");
+    
+    let content = '';
+    if (loading) content += `<div class="spinner" aria-hidden="true"></div>`;
+    if (title) content += `<strong>${title}</strong>`;
+    if (message) content += `<p>${message}</p>`;
 
-    if (loading) {
-        const spinner = document.createElement("div");
-        spinner.className = "spinner";
-        spinner.setAttribute("aria-hidden", "true");
-        panel.appendChild(spinner);
-    }
-
-    if (title) {
-        const heading = document.createElement("strong");
-        heading.textContent = title;
-        panel.appendChild(heading);
-    }
-
-    if (message) {
-        const copy = document.createElement("p");
-        copy.textContent = message;
-        panel.appendChild(copy);
-    }
-
-    container.innerHTML = "";
-    container.appendChild(panel);
+    container.innerHTML = `
+        <div class="status-panel ${variant}" role="${variant === 'is-error' ? 'alert' : 'status'}">
+            ${content}
+        </div>
+    `;
 }
 
 function setContainerBusy(container, isBusy) {
-    if (container) {
-        container.setAttribute("aria-busy", String(isBusy));
-    }
+    if (container) container.setAttribute("aria-busy", String(isBusy));
 }
+
+// ============================================================
+// MODERNIZED TEMPLATE RENDERERS
+// ============================================================
 
 function renderProjects(projects) {
     const container = document.getElementById("projects-container");
-
-    if (!container) {
-        return;
-    }
+    if (!container) return;
 
     setContainerBusy(container, false);
-    container.innerHTML = "";
 
     if (!projects.length) {
         renderStatusPanel(container, {
@@ -240,32 +225,49 @@ function renderProjects(projects) {
         return;
     }
 
-    projects.forEach((project) => {
-        container.appendChild(makeProjectCard(project));
-    });
+    container.innerHTML = projects.map(project => {
+        const difficulty = project.difficulty || "Medium";
+        const tagsHtml = (project.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
+        
+        return `
+            <article class="card">
+                <div class="card-header">
+                    <span class="badge badge-${difficulty.toLowerCase()}">${difficulty}</span>
+                </div>
+                <h3>${project.name || "Untitled project"}</h3>
+                <p>${project.description || "No description provided."}</p>
+                <div class="tag-container">${tagsHtml}</div>
+                <div class="card-actions">
+                    <a href="${project.githubUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View on GitHub</a>
+                </div>
+            </article>
+        `;
+    }).join('');
 }
 
 function renderIssues(issues) {
     const container = document.getElementById("issues-container");
-
-    if (!container) {
-        return;
-    }
+    if (!container) return;
 
     setContainerBusy(container, false);
-    container.innerHTML = "";
 
-    issues.forEach((issue) => {
-        container.appendChild(makeIssueCard(issue));
-    });
+    container.innerHTML = issues.map(issue => `
+        <article class="card">
+            <div class="card-header">
+                <span class="badge badge-easy">Good First Issue</span>
+            </div>
+            <h3>${issue.title || "Untitled issue"}</h3>
+            <p>Repository: <a href="${issue.repoLink || '#'}" target="_blank" rel="noopener noreferrer" class="card-link">${formatRepoLabel(issue.repoLink)}</a></p>
+            <div class="card-actions">
+                <a href="${issue.issueLink || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Go to Issue</a>
+            </div>
+        </article>
+    `).join('');
 }
 
 function populateTagFilter(projects) {
     const tagFilter = document.getElementById("tag-filter");
-
-    if (!tagFilter) {
-        return;
-    }
+    if (!tagFilter) return;
 
     const tags = new Set();
     projects.forEach((project) => {
@@ -273,41 +275,115 @@ function populateTagFilter(projects) {
     });
 
     const selectedValue = tagFilter.value;
-    tagFilter.innerHTML = "";
-
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "All technologies";
-    tagFilter.appendChild(defaultOption);
-
+    
+    let optionsHtml = `<option value="">All technologies</option>`;
     Array.from(tags).sort((a, b) => a.localeCompare(b)).forEach((tag) => {
-        const option = document.createElement("option");
-        option.value = tag;
-        option.textContent = tag;
-        tagFilter.appendChild(option);
+        optionsHtml += `<option value="${tag}">${tag}</option>`;
     });
 
+    tagFilter.innerHTML = optionsHtml;
     tagFilter.value = selectedValue;
+    // initialize custom dropdowns after the native select is populated
+    if (typeof setupCustomDropdowns === 'function') {
+        setupCustomDropdowns();
+    }
 }
+
+// ============================================================
+// CUSTOM DROPDOWN UI ENGINE
+// ============================================================
+
+function setupCustomDropdowns() {
+    const selects = document.querySelectorAll('select.filter-control');
+
+    selects.forEach(select => {
+        // If a custom UI already exists, remove it (refresh)
+        if (select.nextElementSibling && select.nextElementSibling.classList.contains('custom-select')) {
+            select.nextElementSibling.remove();
+        }
+
+        // Hide the native select
+        select.style.display = 'none';
+
+        // Build custom select container
+        const customSelect = document.createElement('div');
+        customSelect.className = 'custom-select';
+
+        const trigger = document.createElement('div');
+        trigger.className = 'custom-select-trigger';
+        const selectedOpt = select.options[select.selectedIndex];
+        trigger.innerHTML = `
+            <span>${selectedOpt ? selectedOpt.text : 'Select...'}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        `;
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'custom-select-options';
+
+        Array.from(select.options).forEach(option => {
+            const optEl = document.createElement('div');
+            optEl.className = 'custom-option' + (option.selected ? ' selected' : '');
+            optEl.textContent = option.text;
+            optEl.dataset.value = option.value;
+
+            optEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                select.value = this.dataset.value;
+                trigger.querySelector('span').textContent = this.textContent;
+                optionsContainer.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+                customSelect.classList.remove('open');
+                select.dispatchEvent(new Event('change'));
+            });
+
+            optionsContainer.appendChild(optEl);
+        });
+
+        customSelect.appendChild(trigger);
+        customSelect.appendChild(optionsContainer);
+        select.parentNode.insertBefore(customSelect, select.nextSibling);
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.querySelectorAll('.custom-select').forEach(cs => {
+                if (cs !== customSelect) cs.classList.remove('open');
+            });
+            customSelect.classList.toggle('open');
+        });
+    });
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
+    });
+}
+
+function formatRepoLabel(repoLink) {
+    if (!repoLink) return "View repository";
+    try {
+        const parts = new URL(repoLink).pathname.split("/").filter(Boolean);
+        if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+    } catch (error) {
+        return "View repository";
+    }
+    return "View repository";
+}
+
+// ============================================================
+// API CALLS
+// ============================================================
 
 async function loadProjectFilters() {
     const tagFilter = document.getElementById("tag-filter");
-
-    if (!tagFilter) {
-        return;
-    }
+    if (!tagFilter) return;
 
     try {
         const response = await fetch(`${API_URL}/projects`);
         const projects = await response.json();
 
-        if (!response.ok) {
-            throw new Error(projects.error || "Error loading filters");
-        }
-
-        if (!Array.isArray(projects)) {
-            throw new Error("Invalid project data received");
-        }
+        if (!response.ok) throw new Error(projects.error || "Error loading filters");
+        if (!Array.isArray(projects)) throw new Error("Invalid project data received");
 
         populateTagFilter(projects);
     } catch (error) {
@@ -329,22 +405,15 @@ async function fetchProjects() {
         const params = new URLSearchParams();
 
         Object.entries(filters).forEach(([key, value]) => {
-            if (value) {
-                params.set(key, value);
-            }
+            if (value) params.set(key, value);
         });
 
         const url = params.toString() ? `${API_URL}/projects?${params.toString()}` : `${API_URL}/projects`;
         const response = await fetch(url);
         const payload = await response.json();
 
-        if (!response.ok) {
-            throw new Error(payload.error || "Failed to load projects");
-        }
-
-        if (!Array.isArray(payload)) {
-            throw new Error("Invalid project data received");
-        }
+        if (!response.ok) throw new Error(payload.error || "Failed to load projects");
+        if (!Array.isArray(payload)) throw new Error("Invalid project data received");
 
         renderProjects(payload);
     } catch (error) {
@@ -369,19 +438,13 @@ async function fetchIssues() {
 
     try {
         const params = new URLSearchParams();
-
-        if (search) {
-            params.set("query", search);
-        }
+        if (search) params.set("query", search);
 
         const url = params.toString() ? `${API_URL}/issues?${params.toString()}` : `${API_URL}/issues`;
         const response = await fetch(url);
         const payload = await response.json();
 
-        if (!response.ok) {
-            throw new Error(payload.error || "Failed to load issues");
-        }
-
+        if (!response.ok) throw new Error(payload.error || "Failed to load issues");
         if (!Array.isArray(payload) || !payload.length) {
             renderStatusPanel(container, {
                 title: search ? "No matching issues" : "No issues available",
@@ -403,114 +466,6 @@ async function fetchIssues() {
     }
 }
 
-function makeProjectCard(project) {
-    const card = document.createElement("article");
-    card.className = "card";
-
-    const header = document.createElement("div");
-    header.className = "card-header";
-
-    const difficultyLevel = project.difficulty || "Medium";
-    const difficulty = document.createElement("span");
-    difficulty.className = `badge badge-${difficultyLevel.toLowerCase()}`;
-    difficulty.textContent = difficultyLevel;
-    header.appendChild(difficulty);
-    card.appendChild(header);
-
-    const title = document.createElement("h3");
-    title.textContent = project.name || "Untitled project";
-    card.appendChild(title);
-
-    const description = document.createElement("p");
-    description.textContent = project.description || "No description provided.";
-    card.appendChild(description);
-
-    const tags = document.createElement("div");
-    tags.className = "tag-container";
-    (project.tags || []).forEach((tag) => {
-        const chip = document.createElement("span");
-        chip.className = "tag";
-        chip.textContent = tag;
-        tags.appendChild(chip);
-    });
-    card.appendChild(tags);
-
-    const actions = document.createElement("div");
-    actions.className = "card-actions";
-
-    const link = document.createElement("a");
-    link.href = project.githubUrl || "#";
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.className = "btn btn-primary";
-    link.textContent = "View on GitHub";
-    actions.appendChild(link);
-    card.appendChild(actions);
-
-    return card;
-}
-
-function formatRepoLabel(repoLink) {
-    if (!repoLink) {
-        return "View repository";
-    }
-
-    try {
-        const parts = new URL(repoLink).pathname.split("/").filter(Boolean);
-        if (parts.length >= 2) {
-            return `${parts[0]}/${parts[1]}`;
-        }
-    } catch (error) {
-        return "View repository";
-    }
-
-    return "View repository";
-}
-
-function makeIssueCard(issue) {
-    const card = document.createElement("article");
-    card.className = "card";
-
-    const header = document.createElement("div");
-    header.className = "card-header";
-
-    const badge = document.createElement("span");
-    badge.className = "badge badge-easy";
-    badge.textContent = "Good First Issue";
-    header.appendChild(badge);
-    card.appendChild(header);
-
-    const title = document.createElement("h3");
-    title.textContent = issue.title || "Untitled issue";
-    card.appendChild(title);
-
-    const repoParagraph = document.createElement("p");
-    repoParagraph.append("Repository: ");
-
-    const repoLink = document.createElement("a");
-    repoLink.href = issue.repoLink || "#";
-    repoLink.target = "_blank";
-    repoLink.rel = "noopener noreferrer";
-    repoLink.className = "card-link";
-    repoLink.textContent = formatRepoLabel(issue.repoLink);
-    repoParagraph.appendChild(repoLink);
-    card.appendChild(repoParagraph);
-
-    const actions = document.createElement("div");
-    actions.className = "card-actions";
-
-    const issueLink = document.createElement("a");
-    issueLink.href = issue.issueLink || "#";
-    issueLink.target = "_blank";
-    issueLink.rel = "noopener noreferrer";
-    issueLink.className = "btn btn-primary";
-    issueLink.textContent = "Go to Issue";
-    actions.appendChild(issueLink);
-    card.appendChild(actions);
-
-    return card;
-}
-
 async function submitProject(event) {
     event.preventDefault();
 
@@ -518,10 +473,12 @@ async function submitProject(event) {
     const submitButton = form.querySelector('button[type="submit"]');
     const messageId = "form-message";
 
+    // Clear any previous field error states
+    form.querySelectorAll('.is-error').forEach((el) => el.classList.remove('is-error'));
+    form.querySelectorAll('.field-error').forEach((el) => el.remove());
+
     setMessage(messageId, "Submitting project...", "");
-    if (submitButton) {
-        submitButton.disabled = true;
-    }
+    if (submitButton) submitButton.disabled = true;
 
     const tagsInput = document.getElementById("tags").value;
     const projectData = {
@@ -544,9 +501,20 @@ async function submitProject(event) {
         const payload = await response.json();
 
         if (!response.ok) {
-            const fieldErrors = payload.fields
-                ? Object.values(payload.fields).join(" ")
-                : payload.error || "Failed to add project.";
+            // If the server returned field-level validation errors, show them inline using template string injection
+            if (payload.fields && typeof payload.fields === 'object') {
+                Object.keys(payload.fields).forEach((fieldName) => {
+                    const input = document.getElementById(fieldName);
+                    if (input) {
+                        input.classList.add('is-error');
+                        input.insertAdjacentHTML('afterend', `<div class="field-error">${payload.fields[fieldName]}</div>`);
+                    }
+                });
+                setMessage(messageId, 'Please fix the highlighted fields.', 'error');
+                return;
+            }
+
+            const fieldErrors = payload.error || "Failed to add project.";
             setMessage(messageId, fieldErrors, "error");
             return;
         }
@@ -560,8 +528,6 @@ async function submitProject(event) {
         console.error("Error submitting project:", error);
         setMessage(messageId, "Could not reach the server. Is the backend running?", "error");
     } finally {
-        if (submitButton) {
-            submitButton.disabled = false;
-        }
+        if (submitButton) submitButton.disabled = false;
     }
 }
