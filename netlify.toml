@@ -3,5 +3,5 @@
   command = "bash ./scripts/generate-config.sh"
 
 [context.production.environment]
-  # Set this in Netlify UI or here. Replace with your Render backend URL when known.
-  API_URL = "https://your-backend.onrender.com/api"
+  # Production API URL for the deployed frontend. Update in Netlify UI if you prefer.
+  API_URL = "https://openforge-48r0.onrender.com/api"
