@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate frontend/config.js with API URL provided by environment variable API_URL
 mkdir -p frontend
-API_URL="${API_URL:-http://127.0.0.1:5000/api}"
+API_URL="${API_URL:-https://openforge-48r0.onrender.com/api}"
 cat > frontend/config.js <<EOF
 window.OPENFORGE_API_URL = "${API_URL}";
 EOF

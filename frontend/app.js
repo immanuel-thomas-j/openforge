@@ -1,5 +1,5 @@
 // Allow overriding the API URL from the page (useful when frontend is hosted separately)
-const API_URL = window.OPENFORGE_API_URL || "http://127.0.0.1:5000/api";
+const API_URL = window.OPENFORGE_API_URL || "https://openforge-48r0.onrender.com/api";
 
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
@@ -477,7 +477,7 @@ async function fetchProjects() {
         console.error("Error fetching projects:", error);
         renderStatusPanel(container, {
             title: "Unable to load projects",
-            message: "Make sure the Flask backend is running on http://127.0.0.1:5000.",
+            message: "Make sure the Flask backend is running on https://openforge-48r0.onrender.com.",
             variant: "is-error",
         });
     }
