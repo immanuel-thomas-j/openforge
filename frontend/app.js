@@ -216,6 +216,7 @@ function renderProjects(projects) {
     if (!container) return;
 
     setContainerBusy(container, false);
+    container.innerHTML = '';
 
     if (!projects.length) {
         renderStatusPanel(container, {
@@ -225,24 +226,51 @@ function renderProjects(projects) {
         return;
     }
 
-    container.innerHTML = projects.map(project => {
+    projects.forEach(project => {
         const difficulty = project.difficulty || "Medium";
-        const tagsHtml = (project.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
-        
-        return `
-            <article class="card">
-                <div class="card-header">
-                    <span class="badge badge-${difficulty.toLowerCase()}">${difficulty}</span>
-                </div>
-                <h3>${project.name || "Untitled project"}</h3>
-                <p>${project.description || "No description provided."}</p>
-                <div class="tag-container">${tagsHtml}</div>
-                <div class="card-actions">
-                    <a href="${project.githubUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View on GitHub</a>
-                </div>
-            </article>
-        `;
-    }).join('');
+
+        const article = document.createElement('article');
+        article.className = 'card';
+
+        const header = document.createElement('div');
+        header.className = 'card-header';
+        const badge = document.createElement('span');
+        badge.className = `badge badge-${difficulty.toLowerCase()}`;
+        badge.textContent = difficulty;
+        header.appendChild(badge);
+        article.appendChild(header);
+
+        const title = document.createElement('h3');
+        title.textContent = project.name || 'Untitled project';
+        article.appendChild(title);
+
+        const desc = document.createElement('p');
+        desc.textContent = project.description || 'No description provided.';
+        article.appendChild(desc);
+
+        const tagContainer = document.createElement('div');
+        tagContainer.className = 'tag-container';
+        (project.tags || []).forEach(tag => {
+            const span = document.createElement('span');
+            span.className = 'tag';
+            span.textContent = tag;
+            tagContainer.appendChild(span);
+        });
+        article.appendChild(tagContainer);
+
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+        const link = document.createElement('a');
+        link.className = 'btn btn-primary';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.href = project.githubUrl || '#';
+        link.textContent = 'View on GitHub';
+        actions.appendChild(link);
+        article.appendChild(actions);
+
+        container.appendChild(article);
+    });
 }
 
 function renderIssues(issues) {
@@ -250,19 +278,48 @@ function renderIssues(issues) {
     if (!container) return;
 
     setContainerBusy(container, false);
+    container.innerHTML = '';
 
-    container.innerHTML = issues.map(issue => `
-        <article class="card">
-            <div class="card-header">
-                <span class="badge badge-easy">Good First Issue</span>
-            </div>
-            <h3>${issue.title || "Untitled issue"}</h3>
-            <p>Repository: <a href="${issue.repoLink || '#'}" target="_blank" rel="noopener noreferrer" class="card-link">${formatRepoLabel(issue.repoLink)}</a></p>
-            <div class="card-actions">
-                <a href="${issue.issueLink || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Go to Issue</a>
-            </div>
-        </article>
-    `).join('');
+    issues.forEach(issue => {
+        const article = document.createElement('article');
+        article.className = 'card';
+
+        const header = document.createElement('div');
+        header.className = 'card-header';
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-easy';
+        badge.textContent = 'Good First Issue';
+        header.appendChild(badge);
+        article.appendChild(header);
+
+        const title = document.createElement('h3');
+        title.textContent = issue.title || 'Untitled issue';
+        article.appendChild(title);
+
+        const repoPara = document.createElement('p');
+        repoPara.textContent = 'Repository: ';
+        const repoLink = document.createElement('a');
+        repoLink.href = issue.repoLink || '#';
+        repoLink.target = '_blank';
+        repoLink.rel = 'noopener noreferrer';
+        repoLink.className = 'card-link';
+        repoLink.textContent = formatRepoLabel(issue.repoLink);
+        repoPara.appendChild(repoLink);
+        article.appendChild(repoPara);
+
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+        const issueAnchor = document.createElement('a');
+        issueAnchor.href = issue.issueLink || '#';
+        issueAnchor.target = '_blank';
+        issueAnchor.rel = 'noopener noreferrer';
+        issueAnchor.className = 'btn btn-primary';
+        issueAnchor.textContent = 'Go to Issue';
+        actions.appendChild(issueAnchor);
+        article.appendChild(actions);
+
+        container.appendChild(article);
+    });
 }
 
 function populateTagFilter(projects) {

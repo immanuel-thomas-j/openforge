@@ -13,7 +13,12 @@ BACKEND_DIR = os.path.dirname(__file__)
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS: allow restricting origins via ALLOWED_ORIGIN env var (comma-separated)
+allowed_origins = os.environ.get("ALLOWED_ORIGIN", "").strip()
+if allowed_origins:
+    CORS(app, origins=[o.strip() for o in allowed_origins.split(",")])
+else:
+    CORS(app)
 
 DATA_FILE = os.path.join(BACKEND_DIR, "data.json")
 ALLOWED_DIFFICULTIES = {"Easy", "Medium", "Hard"}
@@ -368,4 +373,7 @@ def get_issues():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Production-friendly defaults: bind to 0.0.0.0 and read port from environment.
+    port = int(os.environ.get("PORT", 5000))
+    host = os.environ.get("HOST", "0.0.0.0")
+    app.run(host=host, port=port)

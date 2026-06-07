@@ -1,4 +1,16 @@
-# Secrets
+# Local env files
+backend/.env
+frontend/config.js
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# Editor files
+.vscode/
+.DS_Store
+.env
+.env.disabled# Secrets
 .env
 backend/.env
 

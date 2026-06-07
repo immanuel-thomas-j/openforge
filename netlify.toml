@@ -1,0 +1,7 @@
+[build]
+  publish = "frontend"
+  command = "bash ./scripts/generate-config.sh"
+
+[context.production.environment]
+  # Set this in Netlify UI or here. Replace with your Render backend URL when known.
+  API_URL = "https://your-backend.onrender.com/api"
