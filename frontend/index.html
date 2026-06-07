@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OpenForge helps beginners discover curated open-source projects and good-first issues to make their first contribution.">
+    <title>OpenForge | Home</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav class="site-nav" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                OpenForge
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <ul class="nav-links" id="primary-nav">
+                <li><a href="index.html" class="active" aria-current="page">Home</a></li>
+                <li><a href="explore.html">Explore Projects</a></li>
+                <li><a href="issues.html">Beginner Issues</a></li>
+                <li><a href="add.html" class="nav-btn">Add Project</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="main-content" class="container hero">
+        <div class="hero-content">
+            <span class="eyebrow">Discover open source faster</span>
+            <h1>Find your first contribution with less friction.</h1>
+            <p>Browse beginner-friendly projects, explore curated issues, and share repositories that need contributors.</p>
+
+            <div class="search-wrapper" role="search" aria-label="Search projects">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="search" class="search-bar" id="hero-search" placeholder="Search projects, tags, or languages..." aria-label="Search projects, tags, or languages">
+                <button class="btn btn-primary btn-search" type="button">Search</button>
+            </div>
+
+            <div class="hero-actions">
+                <a href="explore.html" class="btn btn-primary">Start Exploring</a>
+                <a href="issues.html" class="btn btn-secondary">View Issues</a>
+            </div>
+        </div>
+
+        <div class="hero-stats" aria-label="OpenForge highlights">
+            <div class="stat">
+                <div class="stat-icon bg-blue" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-text">
+                    <strong>Curated</strong>
+                    <span>Beginner-friendly repositories only.</span>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-icon bg-green" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <div class="stat-text">
+                    <strong>Live</strong>
+                    <span>GitHub issues pulled from active repos.</span>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-icon bg-purple" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                <div class="stat-text">
+                    <strong>Fast</strong>
+                    <span>Cached responses and instant filtering.</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <span class="footer-brand">OpenForge</span>
+            <ul class="footer-links">
+                <li><a href="explore.html">Explore</a></li>
+                <li><a href="issues.html">Issues</a></li>
+                <li><a href="add.html">Submit a project</a></li>
+            </ul>
+            <p class="footer-copy">Built for students and early-career developers finding their first open-source contribution.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

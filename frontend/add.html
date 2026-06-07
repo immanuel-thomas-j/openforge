@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Submit an open-source project to OpenForge so others can discover it and its beginner-friendly issues.">
+    <title>OpenForge | Add Project</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav class="site-nav" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                OpenForge
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <ul class="nav-links" id="primary-nav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="explore.html">Explore Projects</a></li>
+                <li><a href="issues.html">Beginner Issues</a></li>
+                <li><a href="add.html" class="active nav-btn" aria-current="page">Add Project</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="main-content" class="container page-spacing">
+        <div class="form-container">
+            <header class="page-intro form-intro">
+                <span class="eyebrow">Submit</span>
+                <h2>Submit a Project</h2>
+                <p class="form-subtext">Help others find your repository by adding it to OpenForge. We will automatically index its beginner issues.</p>
+            </header>
+
+            <form id="add-project-form" novalidate>
+                <div class="form-group">
+                    <label for="name">Project Name</label>
+                    <input type="text" id="name" name="name" class="form-input" required maxlength="100" placeholder="e.g. React, Flask, OpenForge" autocomplete="organization">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" class="form-input" rows="4" required maxlength="500" placeholder="Briefly explain what this project does and how beginners can help..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="githubUrl">GitHub URL</label>
+                    <input type="url" id="githubUrl" name="githubUrl" class="form-input" placeholder="https://github.com/username/repo" required inputmode="url" autocomplete="url">
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">Tags</label>
+                    <input type="text" id="tags" name="tags" class="form-input" placeholder="Python, React, Documentation" required>
+                    <small class="field-hint">Separate tags with commas.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level</label>
+                    <select id="difficulty" name="difficulty" class="form-input" required>
+                        <option value="Easy">Easy (Good for absolute beginners)</option>
+                        <option value="Medium">Medium (Requires some framework knowledge)</option>
+                        <option value="Hard">Hard (Deep dive into the codebase)</option>
+                    </select>
+                </div>
+
+                <div id="form-message" class="form-message" role="status" aria-live="polite"></div>
+
+                <button type="submit" class="btn btn-primary btn-full">Submit Project</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <span class="footer-brand">OpenForge</span>
+            <ul class="footer-links">
+                <li><a href="explore.html">Explore</a></li>
+                <li><a href="issues.html">Issues</a></li>
+                <li><a href="add.html">Submit a project</a></li>
+            </ul>
+            <p class="footer-copy">Built for students and early-career developers finding their first open-source contribution.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

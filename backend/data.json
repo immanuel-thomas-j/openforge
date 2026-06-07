@@ -1,0 +1,85 @@
+{
+  "next_project_id": 6,
+  "projects": [
+    {
+      "id": 1,
+      "name": "First Contributions",
+      "description": "A repository specifically designed to help beginners make their first open-source contribution in under 5 minutes.",
+      "githubUrl": "https://github.com/firstcontributions/first-contributions",
+      "tags": [
+        "Markdown",
+        "Git",
+        "Beginner"
+      ],
+      "difficulty": "Easy"
+    },
+    {
+      "id": 2,
+      "name": "freeCodeCamp",
+      "description": "The open-source codebase and curriculum for freeCodeCamp.org. Help millions of people learn to code for free.",
+      "githubUrl": "https://github.com/freeCodeCamp/freeCodeCamp",
+      "tags": [
+        "JavaScript",
+        "Node.js",
+        "Education"
+      ],
+      "difficulty": "Medium"
+    },
+    {
+      "id": 3,
+      "name": "OpenForge",
+      "description": "The very platform you are looking at! Help us improve the open-source discovery experience.",
+      "githubUrl": "https://github.com/openforge-org/openforge",
+      "tags": [
+        "Python",
+        "HTML/CSS",
+        "Hackathon"
+      ],
+      "difficulty": "Easy"
+    },
+    {
+      "id": 4,
+      "name": "Storybook",
+      "description": "Frontend workshop for UI component development and testing. Great for folks wanting to dive into React/Vue tools.",
+      "githubUrl": "https://github.com/storybookjs/storybook",
+      "tags": [
+        "TypeScript",
+        "React",
+        "Tooling"
+      ],
+      "difficulty": "Hard"
+    },
+    {
+      "id": 5,
+      "name": "Hugging Face Transformers",
+      "description": "State-of-the-art Machine Learning for Pytorch, TensorFlow, and JAX. Great for AI enthusiasts.",
+      "githubUrl": "https://github.com/huggingface/transformers",
+      "tags": [
+        "Python",
+        "Machine Learning",
+        "AI"
+      ],
+      "difficulty": "Hard"
+    }
+  ],
+  "issues": [
+    {
+      "id": 1,
+      "title": "Fix typo in README documentation",
+      "repoLink": "https://github.com/firstcontributions/first-contributions",
+      "issueLink": "https://github.com/firstcontributions/first-contributions/issues"
+    },
+    {
+      "id": 2,
+      "title": "Update button hover state color",
+      "repoLink": "https://github.com/freeCodeCamp/freeCodeCamp",
+      "issueLink": "https://github.com/freeCodeCamp/freeCodeCamp/issues/12345"
+    },
+    {
+      "id": 3,
+      "title": "Fix broken image link in tutorial doc",
+      "repoLink": "https://github.com/freeCodeCamp/freeCodeCamp",
+      "issueLink": "https://github.com/freeCodeCamp/freeCodeCamp/issues/54321"
+    }
+  ]
+}
