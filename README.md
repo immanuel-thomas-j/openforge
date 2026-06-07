@@ -7,6 +7,8 @@
 - **Frontend** (Netlify): https://open-forge.netlify.app/
 - **Backend** (Render): https://openforge-48r0.onrender.com/api
 
+> **Note:** The backend runs on Render's free tier. The first request may take 20–40 seconds to respond (cold start). Subsequent requests are fast. If the API seems slow during testing, please wait a moment and retry.
+
 ## Why OpenForge?
 
 - **Save time**: No more hunting through countless repos for beginner-friendly issues.
