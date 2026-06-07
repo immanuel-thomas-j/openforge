@@ -45,7 +45,8 @@ python -m unittest backend.test_app -v
 (Add YouTube/Loom link here)
 
 ## Live Demo
-(Add deployed URL here)
+Frontend (Netlify): https://open-forge.netlify.app/
+Backend (Render): https://openforge-48r0.onrender.com/
 
 ## License
 MIT
@@ -138,6 +139,36 @@ These make the repo easier for judges to evaluate quickly:
 
 ## Deployment Notes
 The app is intentionally simple — you can deploy the backend to any platform that supports Python/Flask (Heroku, Railway, Render, Azure Web Apps) and host the frontend as static files. For a quick demo, run the backend locally and serve the frontend via `http.server`.
+
+Production checklist / quick deploy notes
+- Backend (Render): start with Gunicorn — `gunicorn backend.app:app --bind 0.0.0.0:$PORT`. Add `GITHUB_TOKEN` in Render environment settings (do NOT commit it).
+- Frontend (Netlify): we generate `frontend/config.js` at build time using the `API_URL` environment variable (see `netlify.toml` and `scripts/generate-config.sh`). Make sure `API_URL` is set to your Render backend URL (e.g. `https://openforge-48r0.onrender.com/api`).
+
+If you are running the app locally for testing:
+1. Backend (local):
+```bash
+cd backend
+pip install -r requirements.txt
+# dev server (not for production)
+python app.py
+```
+Or run with Gunicorn (closer to production):
+```bash
+pip install -r requirements.txt
+gunicorn backend.app:app --bind 0.0.0.0:5000
+```
+
+2. Frontend (local):
+```bash
+cd frontend
+# generate runtime config if needed:
+API_URL=http://127.0.0.1:5000/api bash ../scripts/generate-config.sh
+python -m http.server 5500
+# open http://127.0.0.1:5500/index.html
+```
+
+Security note
+- Remove and rotate any GitHub tokens if they were accidentally stored in `backend/.env`. Ensure `backend/.env` is listed in `.gitignore` and not tracked by git.
 
 ## Contributing
 If you'd like to contribute, please:
