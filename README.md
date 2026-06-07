@@ -7,7 +7,7 @@
 - **Frontend** (Netlify): https://open-forge.netlify.app/
 - **Backend** (Render): https://openforge-48r0.onrender.com/api
 
-> **Note:** The backend runs on Render's free tier. The first request may take 20–40 seconds to respond (cold start). Subsequent requests are fast. If the API seems slow during testing, please wait a moment and retry.
+> **Note:** The backend runs on Render's free tier. The first request may take 20–40 seconds to respond (cold start). Subsequent requests are fast. If the API seems slow during testing, please wait.
 
 ## Why OpenForge?
 
@@ -16,6 +16,20 @@
 - **Live lookups**: Real-time GitHub issue searches with smart 15-minute caching.
 - **Instant filtering**: Search by project name, description, tags, and difficulty.
 - **Safe rendering**: User content rendered via safe DOM APIs — no raw HTML injection.
+
+## Screenshots
+
+### Home Page — Your First Open-Source PR Starts Here
+The landing page highlights OpenForge's mission with a hero banner, showing "Now indexing 500+ beginner issues" and search functionality.
+
+### Explore Open Source Projects
+Browse curated projects with filtering by technology, difficulty level, and sorting options. Each project card displays difficulty badges and project descriptions.
+
+### Beginner-Friendly Issues
+Search and filter "good first issue" opportunities pulled directly from OpenForge repositories. Results are cached for performance with refresh controls.
+
+### Submit a Project
+Community members can easily add their repositories to OpenForge to help beginners discover them. Simple form for project name, description, GitHub URL, tags, and difficulty level.
 
 ## Tech Stack
 
