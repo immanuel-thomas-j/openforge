@@ -1,8 +1,10 @@
 // Allow overriding the API URL from the page (useful when frontend is hosted separately)
-const API_URL = window.OPENFORGE_API_URL || "https://openforge-48r0.onrender.com/api";
+const API_URL = window.OPENFORGE_API_URL || "http://127.0.0.1:5000/api";
+let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
+    setupAuth();
     setupProjectPage();
     setupIssuePage();
     setupAddProjectForm();
@@ -10,6 +12,130 @@ document.addEventListener("DOMContentLoaded", () => {
     // initialize custom dropdowns globally for pages with selects marked `filter-control`
     if (typeof setupCustomDropdowns === 'function') setupCustomDropdowns();
 });
+
+function getFetchOptions({ method = 'GET', headers = {}, body = null } = {}) {
+    const options = {
+        method,
+        credentials: 'include',
+        headers: {
+            ...headers,
+        },
+    };
+
+    if (body !== null) {
+        options.body = body;
+    }
+
+    return options;
+}
+
+async function setupAuth() {
+    await loadAuthState();
+    updateAddPageForAuth();
+}
+
+async function loadAuthState() {
+    const authContainer = document.getElementById("auth-nav-container");
+    if (!authContainer) return;
+
+    try {
+        const response = await fetch(`${API_URL}/auth/me`, getFetchOptions());
+        const payload = await response.json();
+
+        if (response.ok && payload && payload.login) {
+            currentUser = payload;
+        } else {
+            currentUser = null;
+        }
+    } catch (error) {
+        console.error("Error fetching auth state:", error);
+        currentUser = null;
+    }
+
+    renderAuthNav(currentUser);
+}
+
+function renderAuthNav(user) {
+    const authContainer = document.getElementById("auth-nav-container");
+    if (!authContainer) return;
+
+    if (user) {
+        authContainer.innerHTML = `
+            <div class="auth-menu">
+                <button type="button" class="auth-button auth-user" aria-haspopup="true" aria-expanded="false">
+                    <img src="${user.avatar_url || ''}" alt="${user.login || 'GitHub user'} avatar" class="auth-avatar" />
+                    <span>${user.login}</span>
+                </button>
+                <button type="button" id="logout-button" class="btn btn-ghost">Logout</button>
+            </div>
+        `;
+
+        const logoutButton = document.getElementById("logout-button");
+        if (logoutButton) {
+            logoutButton.addEventListener("click", handleLogout);
+        }
+    } else {
+        authContainer.innerHTML = `
+            <div class="auth-menu">
+                <button type="button" id="github-login-button" class="btn btn-primary btn-small">Sign in with GitHub</button>
+            </div>
+        `;
+
+        const loginButton = document.getElementById("github-login-button");
+        if (loginButton) {
+            loginButton.addEventListener("click", () => {
+                window.location.href = `${API_URL}/auth/login`;
+            });
+        }
+    }
+}
+
+async function handleLogout() {
+    try {
+        const response = await fetch(`${API_URL}/auth/logout`, getFetchOptions({ method: 'POST' }));
+        if (response.ok) {
+            currentUser = null;
+            renderAuthNav(null);
+            updateAddPageForAuth();
+        }
+    } catch (error) {
+        console.error("Error logging out:", error);
+    }
+}
+
+function updateAddPageForAuth() {
+    const authMessageContainer = document.getElementById("add-auth-message");
+    const form = document.getElementById("add-project-form");
+    const submitButton = form?.querySelector('button[type="submit"]');
+
+    if (!authMessageContainer || !form || !submitButton) return;
+
+    if (currentUser) {
+        authMessageContainer.innerHTML = `
+            <div class="auth-success">
+                Signed in as <strong>${currentUser.login}</strong>. You can now submit a project.
+            </div>
+        `;
+        submitButton.disabled = false;
+        form.classList.remove("disabled");
+    } else {
+        authMessageContainer.innerHTML = `
+            <div class="auth-warning">
+                <p>Please sign in with GitHub before submitting a project.</p>
+                <button type="button" class="btn btn-primary btn-small" id="add-github-login">Sign in with GitHub</button>
+            </div>
+        `;
+        submitButton.disabled = true;
+        form.classList.add("disabled");
+
+        const addLoginButton = document.getElementById("add-github-login");
+        if (addLoginButton) {
+            addLoginButton.addEventListener("click", () => {
+                window.location.href = `${API_URL}/auth/login`;
+            });
+        }
+    }
+}
 
 function setupNavigation() {
     const nav = document.querySelector(".site-nav");
@@ -436,7 +562,7 @@ async function loadProjectFilters() {
     if (!tagFilter) return;
 
     try {
-        const response = await fetch(`${API_URL}/projects`);
+        const response = await fetch(`${API_URL}/projects`, getFetchOptions());
         const projects = await response.json();
 
         if (!response.ok) throw new Error(projects.error || "Error loading filters");
@@ -466,7 +592,7 @@ async function fetchProjects() {
         });
 
         const url = params.toString() ? `${API_URL}/projects?${params.toString()}` : `${API_URL}/projects`;
-        const response = await fetch(url);
+        const response = await fetch(url, getFetchOptions());
         const payload = await response.json();
 
         if (!response.ok) throw new Error(payload.error || "Failed to load projects");
@@ -498,7 +624,7 @@ async function fetchIssues() {
         if (search) params.set("query", search);
 
         const url = params.toString() ? `${API_URL}/issues?${params.toString()}` : `${API_URL}/issues`;
-        const response = await fetch(url);
+        const response = await fetch(url, getFetchOptions());
         const payload = await response.json();
 
         if (!response.ok) throw new Error(payload.error || "Failed to load issues");
@@ -547,13 +673,13 @@ async function submitProject(event) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/projects`, {
+        const response = await fetch(`${API_URL}/projects`, getFetchOptions({
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(projectData),
-        });
+        }));
 
         const payload = await response.json();
 

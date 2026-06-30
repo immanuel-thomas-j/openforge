@@ -2,10 +2,10 @@ import json
 import os
 import threading
 import time
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, redirect, request, session
 import requests
 from flask_cors import CORS
 
@@ -13,15 +13,25 @@ BACKEND_DIR = os.path.dirname(__file__)
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-locally")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "None"
+app.config["SESSION_COOKIE_SECURE"] = False
+
 # Configure CORS: allow restricting origins via ALLOWED_ORIGIN env var (comma-separated)
 allowed_origins = os.environ.get("ALLOWED_ORIGIN", "").strip()
 if allowed_origins:
-    CORS(app, origins=[o.strip() for o in allowed_origins.split(",")])
+    cors_origins = [o.strip() for o in allowed_origins.split(",")]
 else:
-    CORS(app)
+    cors_origins = ["http://127.0.0.1:5500", "http://localhost:5500"]
+
+CORS(app, origins=cors_origins, supports_credentials=True)
 
 DATA_FILE = os.path.join(BACKEND_DIR, "data.json")
 ALLOWED_DIFFICULTIES = {"Easy", "Medium", "Hard"}
+GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "").strip()
+GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "").strip()
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://127.0.0.1:5500").rstrip("/")
 GITHUB_ISSUE_SEARCH_URL = "https://api.github.com/search/issues"
 GITHUB_ISSUE_LABEL = 'label:"good first issue"'
 ISSUE_CACHE_TTL_SECONDS = 15 * 60
@@ -206,6 +216,74 @@ def _github_request_headers():
     return headers
 
 
+def _get_github_oauth_redirect_uri():
+    return f"{request.url_root.rstrip('/')}/auth/callback"
+
+
+def _build_github_authorize_url():
+    query = {
+        "client_id": GITHUB_CLIENT_ID,
+        "redirect_uri": _get_github_oauth_redirect_uri(),
+        "scope": "read:user",
+    }
+    return f"https://github.com/login/oauth/authorize?{urlencode(query)}"
+
+
+def _exchange_code_for_token(code):
+    response = requests.post(
+        "https://github.com/login/oauth/access_token",
+        headers={"Accept": "application/json"},
+        data={
+            "client_id": GITHUB_CLIENT_ID,
+            "client_secret": GITHUB_CLIENT_SECRET,
+            "code": code,
+            "redirect_uri": _get_github_oauth_redirect_uri(),
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return payload.get("access_token")
+
+
+def _fetch_github_user_profile(access_token):
+    response = requests.get(
+        "https://api.github.com/user",
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": f"Bearer {access_token}",
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def _get_logged_in_user():
+    return session.get("user")
+
+
+def _require_login():
+    user = _get_logged_in_user()
+    if not user:
+        return jsonify({"error": "Authentication required. Please sign in with GitHub."}), 401
+    return None
+
+
+def _attach_submitter(project, user):
+    project["submittedBy"] = user.get("login")
+    return project
+
+
+def _ensure_oauth_settings():
+    if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
+        raise RuntimeError("GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be configured in backend/.env")
+
+
+def _build_error_response(message, status_code=400):
+    return jsonify({"error": message}), status_code
+
+
 def _get_cached_issues(cache_key):
     with ISSUE_CACHE_LOCK:
         cached = ISSUE_CACHE.get(cache_key)
@@ -336,8 +414,57 @@ def get_projects():
     return jsonify(filtered_projects)
 
 
+@app.route("/auth/login", methods=["GET"])
+def auth_login():
+    _ensure_oauth_settings()
+    return redirect(_build_github_authorize_url())
+
+
+@app.route("/auth/callback", methods=["GET"])
+def auth_callback():
+    code = request.args.get("code", "").strip()
+    if not code:
+        return _build_error_response("Missing OAuth code from GitHub." , 400)
+
+    try:
+        access_token = _exchange_code_for_token(code)
+        if not access_token:
+            return _build_error_response("Failed to obtain GitHub access token.", 400)
+
+        profile = _fetch_github_user_profile(access_token)
+    except requests.exceptions.RequestException as error:
+        print(f"GitHub OAuth Error: {error}")
+        return _build_error_response("Unable to complete GitHub sign-in.", 500)
+
+    session["user"] = {
+        "login": profile.get("login"),
+        "avatar_url": profile.get("avatar_url"),
+        "id": profile.get("id"),
+    }
+
+    return redirect(f"{FRONTEND_URL}/index.html")
+
+
+@app.route("/auth/me", methods=["GET"])
+def auth_me():
+    user = _get_logged_in_user()
+    if not user:
+        return jsonify({"error": "Not authenticated."}), 401
+    return jsonify(user)
+
+
+@app.route("/auth/logout", methods=["POST"])
+def auth_logout():
+    session.pop("user", None)
+    return jsonify({"message": "Logged out successfully."})
+
+
 @app.route("/api/projects", methods=["POST"])
 def add_project():
+    auth_error = _require_login()
+    if auth_error:
+        return auth_error
+
     payload = request.get_json(silent=True) or {}
     if not isinstance(payload, dict):
         return jsonify({"error": "Request body must be a JSON object."}), 400
@@ -345,6 +472,9 @@ def add_project():
     project, errors = _validate_project_payload(payload)
     if errors:
         return jsonify({"error": "Validation failed.", "fields": errors}), 400
+
+    user = _get_logged_in_user()
+    project = _attach_submitter(project, user)
 
     with DATA_LOCK:
         data = read_data()

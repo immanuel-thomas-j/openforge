@@ -31,6 +31,7 @@
                 <li><a href="explore.html">Explore Projects</a></li>
                 <li><a href="issues.html">Beginner Issues</a></li>
                 <li><a href="add.html" class="active nav-btn" aria-current="page">Add Project</a></li>
+                <li id="auth-nav-container" class="auth-nav-item"></li>
             </ul>
         </div>
     </nav>
@@ -41,6 +42,8 @@
                 <h2>Submit a Project</h2>
                 <p class="form-subtext">Help others find your repository by adding it to OpenForge. We will automatically index its beginner issues.</p>
             </header>
+
+            <div id="add-auth-message" class="auth-banner"></div>
 
             <form id="add-project-form" novalidate>
                 <div class="form-group">
