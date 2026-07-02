@@ -588,3 +588,19 @@ async function submitProject(event) {
         if (submitButton) submitButton.disabled = false;
     }
 }
+
+// Safely handling the theme toggle interactions
+
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleButton = document.getElementById("theme-toggle");
+    const preservedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", preservedTheme);
+    if (toggleButton) {
+        toggleButton.addEventListener("click", () => {
+            const currentTheme = document.documentElement.getAttribute("data-theme");
+            const targetedTheme = currentTheme === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", targetedTheme);
+            localStorage.setItem("theme", targetedTheme);
+        })
+    }
+});

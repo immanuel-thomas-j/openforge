@@ -1138,3 +1138,151 @@ main {
     color: var(--primary);
     font-weight: 600;
 }
+
+/* ==========================================================================
+   1. Eye-Friendly Theme Variables & Palette Overrides
+   ========================================================================== */
+:root {
+    --toggle-bg: #f4f4f5;
+    --toggle-border: #e5e5e5;
+    --nav-bg: rgba(255, 255, 255, 0.75);
+    --footer-bg: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] {
+    /* Soothing Dark Palette (Deep Charcoal Blue & Soft Premium Blue) */
+    --bg: #0b0f17;                  /* Smooth deep dark background */
+    --surface: #151b26;             /* Card surface */
+    --surface-strong: #1e2533;      /* Active items */
+    --surface-muted: #111622;
+    --text: #f8fafc;                /* Crisp white-grey for text */
+    --text-soft: #94a3b8;           /* Muted cool slate text */
+    --border: #1e293b;              /* Dark border line */
+    
+    /* Matching Premium Shades of Blue */
+    --primary: #4fadfe;             /* Professional bright blue (Matches logo font) */
+    --primary-deep: #3892e0;        /* Hover blue */
+    --primary-soft: rgba(79, 173, 254, 0.1);
+    --secondary: #1e2533;
+
+    /* Grey Overrides for Header and Footer to reduce eye strain */
+    --nav-bg: rgba(22, 28, 39, 0.85);    /* Soft dark grey-blue navigation */
+    --footer-bg: #121722;                /* Dark matching footer grey */
+
+    --accent-gradient: linear-gradient(135deg, #4fadfe 0%, #6875f5 100%);
+    --primary-glow: 0 10px 25px -10px rgba(79, 173, 254, 0.35);
+    --shadow-lg: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+    --shadow-md: 0 4px 12px -4px rgba(0, 0, 0, 0.4);
+    
+    --toggle-bg: #1e2533;
+    --toggle-border: #2d3748;
+}
+
+/* Base Background Correction */
+body::before {
+    display: none; /* Disables high-contrast grid patterns in dark mode */
+}
+
+/* Connect Header & Footer directly to the theme variables */
+.site-nav {
+    background: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.site-footer {
+    background: var(--footer-bg) !important;
+    border-top: 1px solid var(--border) !important;
+}
+
+/* Sync Navigation link colors with Title logo font */
+[data-theme="dark"] .nav-links a {
+    color: var(--text-soft);
+}
+[data-theme="dark"] .nav-links a:hover,
+[data-theme="dark"] .nav-links a.active {
+    color: var(--primary) !important; /* Forces link to match the premium blue title logo */
+}
+
+/* Input Fields & Dropdowns Dark Mode Fixes */
+[data-theme="dark"] .search-wrapper,
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .filter-control,
+[data-theme="dark"] .custom-select-trigger {
+    background: #151b26;
+    border-color: #242f42;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .custom-select-options {
+    background: #151b26;
+    border-color: #242f42;
+}
+
+[data-theme="dark"] .search-bar::placeholder {
+    color: #475569;
+}
+
+/* ==========================================================================
+   3. Dark Mode Specific Component Overrides
+   ========================================================================== */
+[data-theme="dark"] .nav-btn {
+    background: #ffffff !important;     /* Keeps the clean white background pill */
+    color: #0b0f17 !important;          /* Forces the text to be a clear, dark charcoal-black */
+}
+
+[data-theme="dark"] .nav-btn:hover {
+    background: #e2e8f0 !important;     /* Gives it a subtle grey hover effect */
+    color: #0b0f17 !important;          /* Ensures the text stays readable on hover */
+}
+
+/* ==========================================================================
+   2. Floating Top-Right Toggle Button Adjustments
+   ========================================================================== */
+.nav-container {
+    padding-right: 4.5rem; /* Prevents layout items from sticking into the toggle */
+}
+
+.theme-btn {
+    position: fixed; 
+    top: 0.95rem;          /* Vertically aligns perfectly with the header bar items */
+    right: 2rem; 
+    z-index: 1000;         
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    
+    cursor: pointer;
+    border-radius: 50%;
+    background-color: var(--toggle-bg);
+    border: 1px solid var(--toggle-border);
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-btn:hover {
+    transform: translateY(-1px) scale(1.05);
+}
+
+/* Toggle Switch Overlays */
+[data-theme="light"] .moon-icon { display: block; }
+[data-theme="light"] .sun-icon  { display: none; }
+
+[data-theme="dark"] .moon-icon  { display: none; }
+[data-theme="dark"] .sun-icon   { display: block; }
+
+/* Responsive Mobile Rules */
+@media (max-width: 768px) {
+    .nav-container {
+        padding-right: 5%; 
+    }
+    .theme-btn {
+        position: absolute; 
+        top: 1rem;
+        right: 4.5rem;      
+    }
+}
