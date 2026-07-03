@@ -1,5 +1,9 @@
 // Allow overriding the API URL from the page (useful when frontend is hosted separately)
 const API_URL = window.OPENFORGE_API_URL || "http://127.0.0.1:5000/api";
+// BASE_URL (without /api suffix) for auth endpoints (/auth/login, /auth/logout, /auth/me)
+const BASE_URL = window.OPENFORGE_API_URL
+    ? window.OPENFORGE_API_URL.replace(/\/api\/?$/, "")
+    : "http://127.0.0.1:5000";
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -39,7 +43,7 @@ async function loadAuthState() {
     if (!authContainer) return;
 
     try {
-        const response = await fetch(`${API_URL}/auth/me`, getFetchOptions());
+        const response = await fetch(`${BASE_URL}/auth/me`, getFetchOptions());
         const payload = await response.json();
 
         if (response.ok && payload && payload.login) {
@@ -84,7 +88,7 @@ function renderAuthNav(user) {
         const loginButton = document.getElementById("github-login-button");
         if (loginButton) {
             loginButton.addEventListener("click", () => {
-                window.location.href = `${API_URL}/auth/login`;
+                window.location.href = `${BASE_URL}/auth/login`;
             });
         }
     }
@@ -92,7 +96,7 @@ function renderAuthNav(user) {
 
 async function handleLogout() {
     try {
-        const response = await fetch(`${API_URL}/auth/logout`, getFetchOptions({ method: 'POST' }));
+        const response = await fetch(`${BASE_URL}/auth/logout`, getFetchOptions({ method: 'POST' }));
         if (response.ok) {
             currentUser = null;
             renderAuthNav(null);
@@ -131,7 +135,7 @@ function updateAddPageForAuth() {
         const addLoginButton = document.getElementById("add-github-login");
         if (addLoginButton) {
             addLoginButton.addEventListener("click", () => {
-                window.location.href = `${API_URL}/auth/login`;
+                window.location.href = `${BASE_URL}/auth/login`;
             });
         }
     }
@@ -583,6 +587,8 @@ async function fetchProjects() {
         loading: true,
     });
 
+    let wakingUpTimer = null;
+
     try {
         const filters = getProjectFilters();
         const params = new URLSearchParams();
@@ -592,18 +598,50 @@ async function fetchProjects() {
         });
 
         const url = params.toString() ? `${API_URL}/projects?${params.toString()}` : `${API_URL}/projects`;
-        const response = await fetch(url, getFetchOptions());
+        
+        // Start a timer to show "waking up" message if fetch takes >3s
+        const fetchPromise = fetch(url, getFetchOptions());
+        const wakingUpPromise = new Promise(resolve => {
+            wakingUpTimer = window.setTimeout(() => {
+                renderStatusPanel(container, {
+                    title: "Backend is waking up...",
+                    message: "Render free tier backend is starting. This may take 30 seconds on first load.",
+                    loading: true,
+                });
+                resolve(null);
+            }, 3000);
+        });
+
+        const response = await Promise.race([
+            fetchPromise,
+            wakingUpPromise.then(() => fetchPromise)
+        ]);
+
+        window.clearTimeout(wakingUpTimer);
+        
         const payload = await response.json();
 
-        if (!response.ok) throw new Error(payload.error || "Failed to load projects");
+        if (!response.ok) {
+            const errorMsg = payload.error || "Failed to load projects";
+            throw new Error(`${response.status}: ${errorMsg}`);
+        }
         if (!Array.isArray(payload)) throw new Error("Invalid project data received");
 
         renderProjects(payload);
     } catch (error) {
         console.error("Error fetching projects:", error);
+        let errorTitle = "Unable to load projects";
+        let errorMessage = "Make sure the Flask backend is running on https://openforge-48r0.onrender.com.";
+        
+        // Check if error message contains 403 status
+        if (error.message && error.message.includes("403")) {
+            errorTitle = "Rate limit exceeded";
+            errorMessage = "GitHub API rate limit reached. Please try again in a few minutes.";
+        }
+        
         renderStatusPanel(container, {
-            title: "Unable to load projects",
-            message: "Make sure the Flask backend is running on https://openforge-48r0.onrender.com.",
+            title: errorTitle,
+            message: errorMessage,
             variant: "is-error",
         });
     }
@@ -619,15 +657,40 @@ async function fetchIssues() {
         loading: true,
     });
 
+    let wakingUpTimer = null;
+
     try {
         const params = new URLSearchParams();
         if (search) params.set("query", search);
 
         const url = params.toString() ? `${API_URL}/issues?${params.toString()}` : `${API_URL}/issues`;
-        const response = await fetch(url, getFetchOptions());
+        
+        // Start a timer to show "waking up" message if fetch takes >3s
+        const fetchPromise = fetch(url, getFetchOptions());
+        const wakingUpPromise = new Promise(resolve => {
+            wakingUpTimer = window.setTimeout(() => {
+                renderStatusPanel(container, {
+                    title: "Backend is waking up...",
+                    message: "Render free tier backend is starting. This may take 30 seconds on first load.",
+                    loading: true,
+                });
+                resolve(null);
+            }, 3000);
+        });
+
+        const response = await Promise.race([
+            fetchPromise,
+            wakingUpPromise.then(() => fetchPromise)
+        ]);
+
+        window.clearTimeout(wakingUpTimer);
+        
         const payload = await response.json();
 
-        if (!response.ok) throw new Error(payload.error || "Failed to load issues");
+        if (!response.ok) {
+            const errorMsg = payload.error || "Failed to load issues";
+            throw new Error(`${response.status}: ${errorMsg}`);
+        }
         if (!Array.isArray(payload) || !payload.length) {
             renderStatusPanel(container, {
                 title: search ? "No matching issues" : "No issues available",
@@ -641,9 +704,18 @@ async function fetchIssues() {
         renderIssues(payload);
     } catch (error) {
         console.error("Error fetching issues:", error);
+        let errorTitle = "Unable to load issues";
+        let errorMessage = "GitHub may be unavailable or the rate limit was exceeded. Try again shortly.";
+        
+        // Check if error message contains 403 status (rate limit)
+        if (error.message && error.message.includes("403")) {
+            errorTitle = "Rate limit exceeded";
+            errorMessage = "GitHub API rate limit reached. Please try again in a few minutes.";
+        }
+        
         renderStatusPanel(container, {
-            title: "Unable to load issues",
-            message: "GitHub may be unavailable or the rate limit was exceeded. Try again shortly.",
+            title: errorTitle,
+            message: errorMessage,
             variant: "is-error",
         });
     }

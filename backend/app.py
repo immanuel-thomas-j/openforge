@@ -373,6 +373,13 @@ def _collect_live_issues(search_term=""):
     for repo_slug in repo_slugs:
         try:
             repo_issues = _fetch_repo_issues(repo_slug, search_term)
+        except requests.exceptions.HTTPError as error:
+            # Bubble up 403 (rate limit) errors to be handled by the endpoint
+            if error.response.status_code == 403:
+                raise
+            # For other HTTP errors, log and continue
+            print(f"GitHub API Error for {repo_slug}: {error}")
+            continue
         except requests.exceptions.RequestException as error:
             print(f"GitHub API Error for {repo_slug}: {error}")
             continue
@@ -497,6 +504,13 @@ def get_issues():
     try:
         live_issues = _collect_live_issues(search_term)
         return jsonify(live_issues)
+    except requests.exceptions.HTTPError as error:
+        # Handle GitHub API rate limit (403 Forbidden)
+        if error.response.status_code == 403:
+            print(f"GitHub API Rate Limit Error: {error}")
+            return jsonify({"error": "GitHub API rate limit reached. Please try again in a few minutes."}), 403
+        print(f"GitHub API HTTP Error: {error}")
+        return jsonify({"error": "Could not fetch live issues from GitHub at this time."}), 500
     except requests.exceptions.RequestException as error:
         print(f"GitHub API Error: {error}")
         return jsonify({"error": "Could not fetch live issues from GitHub at this time."}), 500
