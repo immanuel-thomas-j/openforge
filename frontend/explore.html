@@ -87,7 +87,13 @@
             </div>
         </div>
 
-        <div class="grid projects-grid" id="projects-container" aria-live="polite" aria-busy="true"></div>
+        <div class="grid projects-grid" id="projects-container" aria-live="polite" aria-busy="true">
+            <div class="status-panel" role="status">
+                <div class="spinner" aria-hidden="true"></div>
+                <strong>Loading projects</strong>
+                <p>Fetching curated repositories from OpenForge...</p>
+            </div>
+        </div>
     </main>
 
     <footer class="site-footer">

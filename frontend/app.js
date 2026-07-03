@@ -18,6 +18,19 @@ function setupNavigation() {
 
     if (!nav || !toggle || !links) return;
 
+    // expose nav height to CSS (used by mobile panel max-height calculation)
+    const setNavHeightVar = () => {
+        const h = nav.offsetHeight || 56;
+        nav.style.setProperty('--site-nav-height', `${h}px`);
+    };
+    setNavHeightVar();
+    // debounce resize updates
+    let navResizeTimer = null;
+    window.addEventListener('resize', () => {
+        if (navResizeTimer) clearTimeout(navResizeTimer);
+        navResizeTimer = setTimeout(setNavHeightVar, 120);
+    });
+
     let navBackdrop = null;
 
     const createBackdrop = () => {
@@ -40,6 +53,7 @@ function setupNavigation() {
         nav.classList.remove("nav-open");
         links.classList.remove("active");
         toggle.setAttribute("aria-expanded", "false");
+        document.body.classList.remove('nav-open');
         removeBackdrop();
     };
 
@@ -47,6 +61,8 @@ function setupNavigation() {
         const isOpen = nav.classList.toggle("nav-open");
         links.classList.toggle("active", isOpen);
         toggle.setAttribute("aria-expanded", String(isOpen));
+        // prevent background scroll when mobile nav is open
+        document.body.classList.toggle('nav-open', isOpen);
         if (isOpen) createBackdrop(); else removeBackdrop();
     });
 

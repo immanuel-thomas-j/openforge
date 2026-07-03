@@ -217,7 +217,7 @@ curl "http://127.0.0.1:5000/api/issues?query=documentation"
 ### Backend (Render)
 
 1. Connect your GitHub repository.
-2. Set build command: `pip install -r requirements.txt`
+2. Build command: `pip install -r requirements.txt`
 3. Set start command: `gunicorn backend.app:app --bind 0.0.0.0:$PORT`
 4. Add environment variables:
    - `GITHUB_TOKEN` (do NOT commit this)
@@ -236,25 +236,71 @@ Alternatively, use the `Procfile` for Heroku or similar platforms.
 
 The `netlify.toml` and `scripts/generate-config.sh` automatically inject the API URL into `frontend/config.js` at build time.
 
-## 🤝 Contributing
-
-Found a bug or have an idea?
-
-1. **Fork** this repository
-2. **Create a branch:** `git checkout -b feature/your-idea`
-3. **Commit changes:** `git add . && git commit -m "Add feature"`
-4. **Push:** `git push origin feature/your-idea`
-5. **Open a PR** against `main` branch
-
-**Guidelines:**
-- Backend: Follow PEP 8
-- Frontend: Semantic HTML, no external dependencies
-- Tests: Run `python -m unittest backend.test_app -v` before pushing
-
-## 📜 License
-
-MIT License — use and modify freely.
+**Contribute / Contact**
+- Open an issue or PR on the repository. Licensed under the [MIT License](LICENSE).
 
 ---
 
+## 🤝 Contributing to OpenForge
+
+We welcome contributions of all levels, especially from participants of the **Elite Coders Summer of Code (ECSoC) 2026**! Please read our [Contributing Guide](CONTRIBUTING.md) for full instructions.
+
+### 🏆 ECSoC 2026 Contribution Rules
+Before contributing, please make sure you understand our rules:
+- **Issue Assignment:** You must be assigned to an issue before writing code or submitting a PR. Unassigned PRs may be closed.
+- **One PR per Issue:** Keep your PRs small and focused. Do not mix multiple issues in one PR.
+- **UI Screenshots:** Include before/after screenshots for any interface changes.
+- **Code Ownership:** If you submit generated code, you must review and verify it yourself.
+
+---
+
+## 🛠️ Development & Workflows
+
+### Local Development
+To run OpenForge locally:
+1. **Backend (Flask):**
+   ```bash
+   cd backend
+   python -m venv .venv
+   # Windows:
+   .venv\Scripts\activate
+   # macOS/Linux:
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   python app.py
+   ```
+2. **Frontend (HTML/CSS/JS):**
+   ```bash
+   cd frontend
+   # optional: point to local backend API
+   API_URL=http://127.0.0.1:5000/api bash ../scripts/generate-config.sh
+   python -m http.server 5500
+   ```
+   Open `http://127.0.0.1:5500/index.html` in your browser.
+
+### Issue Workflow
+1. **Explore:** Find a labeled issue or create a new one using our templates.
+2. **Claim:** Request assignment by commenting on the issue.
+3. **Priority:** Issue creators receive first priority to implement their own issues.
+4. **Activity:** Assignees must show active progress. Inactivity of 3 days or more may result in reassignment.
+
+### PR Workflow
+1. **Fork & Branch:** Fork this repo, create a branch named `feature/issue-<num>-<desc>` or `bugfix/issue-<num>-<desc>`.
+2. **Implement & Test:** Code your solution, run backend unit tests (`python -m unittest backend.test_app -v`), and verify frontend functionality with no console errors.
+3. **Submit:** Open a PR using our PR Template. Link the issue (e.g., `Closes #12`).
+4. **Review & Merge:** A maintainer will review, request changes if necessary, tag it with `ECSoC26`, and squash-merge once approved.
+
+---
+
+## 📐 Code Style
+- **Python:** Follow PEP 8 guidelines.
+- **Frontend:** Semantic HTML5, Vanilla CSS for responsive layouts, and safe DOM APIs (avoid `innerHTML` with user inputs).
+- **Commits:** Follow Angular/Conventional Commits (e.g., `feat(ui): ...`, `fix(api): ...`).
+
+---
+
+## 👥 Community & Etiquette
+We are dedicated to providing a welcoming, diverse, and safe environment for all contributors. Please review our [Code of Conduct](CODE_OF_CONDUCT.md) for details on expected behavior and reporting guidelines.
+
+---
 **Made for hackathon. Ready for production.**

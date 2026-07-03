@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 General Questions & Discussions
+    url: https://github.com/immanuel-thomas-j/openforge/discussions
+    about: Have a question or want to chat with the community? Start a discussion here instead of opening a bug or feature issue.
+  - name: 🏆 Elite Coders Summer of Code (ECSoC) 2026
+    url: https://github.com/immanuel-thomas-j/openforge/discussions/categories/ecsoc-2026
+    about: Read announcements, guidelines, and connect with other ECSoC 2026 participants.
