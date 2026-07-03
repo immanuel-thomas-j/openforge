@@ -5,3 +5,8 @@
 [context.production.environment]
   # Production API URL for the deployed frontend. Update in Netlify UI if you prefer.
   API_URL = "https://openforge-48r0.onrender.com/api"
+
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
