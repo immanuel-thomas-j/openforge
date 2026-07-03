@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Page not found — OpenForge">
+    <title>OpenForge | 404 — Page Not Found</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .not-found-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5rem 1.5rem 4rem;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes dashDraw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes signSwing {
+            0%, 100% { transform: rotate(-6deg); }
+            50% { transform: rotate(6deg); }
+        }
+
+        .not-found-code {
+            font-size: clamp(5rem, 18vw, 9rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.06em;
+            background: var(--accent-gradient);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation:
+                fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards,
+                gradientShift 6s ease-in-out infinite 0.75s,
+                floatY 4s ease-in-out infinite 0.75s;
+            will-change: transform, opacity;
+        }
+
+        .not-found-section h1 {
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.75rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+
+        .not-found-section p {
+            color: var(--text-soft);
+            font-size: 1rem;
+            max-width: 38ch;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.32s forwards;
+        }
+
+        .not-found-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.44s forwards;
+        }
+
+        .not-found-actions .btn-primary {
+            position: relative;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+        }
+
+        .not-found-actions .btn-primary:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 10px 24px -8px rgba(124, 58, 237, 0.5);
+        }
+
+        .not-found-actions .btn-primary:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .redirect-notice {
+            font-size: 0.88rem;
+            color: var(--text-soft);
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .redirect-notice.hidden {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .redirect-notice #countdown {
+            display: inline-block;
+            min-width: 1ch;
+            font-variant-numeric: tabular-nums;
+            animation: countPop 1s steps(1, end) infinite;
+        }
+
+        @keyframes countPop {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.28); }
+            30% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        .signpost-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0s forwards;
+        }
+
+        .signpost-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .signpost-icon .post-line {
+            stroke-dasharray: 40;
+            stroke-dashoffset: 40;
+            animation: dashDraw 0.5s ease 0.55s forwards;
+        }
+
+        .signpost-icon .sign-group {
+            transform-origin: 32px 20px;
+            opacity: 0;
+            animation: fadeSlideUp 0.4s ease 0.85s forwards, signSwing 3.4s ease-in-out infinite 1.3s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .not-found-code,
+            .not-found-section h1,
+            .not-found-section p,
+            .not-found-actions,
+            .signpost-icon,
+            .signpost-icon .post-line,
+            .signpost-icon .sign-group {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav class="site-nav" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                OpenForge
+            </a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <ul class="nav-links" id="primary-nav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="explore.html">Explore Projects</a></li>
+                <li><a href="issues.html">Beginner Issues</a></li>
+                <li><a href="add.html" class="nav-btn">Add Project</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="main-content" class="not-found-section">
+        <div class="signpost-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+                <line class="post-line" x1="32" y1="20" x2="32" y2="54" stroke="url(#sgrad)" stroke-width="3" stroke-linecap="round"/>
+                <g class="sign-group">
+                    <path d="M32 12 H50 L44 20 L50 28 H32 Z" fill="url(#sgrad)"/>
+                    <path d="M32 14 H16 L22 20 L16 26 H32 Z" fill="none" stroke="url(#sgrad)" stroke-width="2.5" stroke-linejoin="round"/>
+                </g>
+                <defs>
+                    <linearGradient id="sgrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#111827"/>
+                        <stop offset="100%" stop-color="#4b5563"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        <div class="not-found-code" aria-hidden="true">404</div>
+        <h1>Page Not Found</h1>
+        <p>The page you're looking for doesn't exist or has been moved.</p>
+        <div class="not-found-actions">
+            <a href="index.html" class="btn btn-primary" id="home-btn">Back to Home</a>
+            <span class="redirect-notice" id="redirect-notice" aria-live="polite">
+                Redirecting in <strong id="countdown">5</strong> seconds…
+            </span>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <span class="footer-brand">OpenForge</span>
+            <ul class="footer-links">
+                <li><a href="explore.html">Explore</a></li>
+                <li><a href="issues.html">Issues</a></li>
+                <li><a href="add.html">Submit a project</a></li>
+            </ul>
+            <p class="footer-copy">Built for students and early-career developers finding their first open-source contribution.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        (function () {
+            var seconds = 5;
+            var countdownEl = document.getElementById('countdown');
+            var noticeEl = document.getElementById('redirect-notice');
+            var homeBtn = document.getElementById('home-btn');
+            var timer;
+
+            function tick() {
+                seconds -= 1;
+                countdownEl.textContent = seconds;
+                if (seconds <= 0) {
+                    window.location.href = 'index.html';
+                }
+            }
+
+            timer = setInterval(tick, 1000);
+
+            homeBtn.addEventListener('click', function () {
+                clearInterval(timer);
+                noticeEl.classList.add('hidden');
+            });
+        })();
+    </script>
+</body>
+</html>
