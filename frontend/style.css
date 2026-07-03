@@ -65,6 +65,7 @@ body::before {
         linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
     background-size: 32px 32px;
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1), transparent 60%);
     mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1), transparent 60%);
     opacity: 0.6;
 }
@@ -141,8 +142,8 @@ main {
     z-index: 20;
     border-bottom: 1px solid rgba(229, 229, 229, 0.5);
     background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
 }
 
 .nav-container {
@@ -294,6 +295,7 @@ main {
     line-height: 1.1;
     background: var(--accent-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.04em; 
     font-weight: 800;
@@ -308,10 +310,10 @@ main {
 
 /* Specific styling for the clean hero search */
 .hero-search-wrapper {
-    max-width: 680px; 
+    max-width: 500px; 
     margin: 0 auto 0; 
-    padding: 0.75rem 1.5rem;
-    min-height: 64px;
+    padding: 0.4rem 1rem;
+    min-height: 48px;
 }
 
 .hero-search-wrapper .search-icon {
@@ -423,10 +425,10 @@ main {
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    max-width: 600px;
+    max-width: 400px;
     margin: 0 auto;
-    padding: 0.5rem 0.5rem 0.5rem 1.5rem; 
-    min-height: 60px;
+    padding: 0.35rem 0.35rem 0.35rem 1rem; 
+    min-height: 44px;
     border-radius: var(--radius-pill);
     border: 2px solid var(--border);
     background: #f4f4f5;
@@ -451,7 +453,7 @@ main {
     border: 0;
     background: transparent;
     color: var(--text);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     min-width: 0;
 }
 
@@ -465,10 +467,10 @@ main {
 }
 
 .inline-search {
-    flex: 1 1 320px;
-    max-width: none;
+    flex: 1 1 auto;
+    max-width: 400px;
     margin: 0;
-    width: auto;
+    width: 100%;
 }
 
 /* ============================================================
@@ -989,7 +991,7 @@ main {
 
     .controls-bar {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
     }
 
     .filter-group {
@@ -1021,10 +1023,14 @@ main {
     }
 
     .search-wrapper {
-        max-width: 520px;
-        padding-left: 1rem;
-        padding-right: 0.75rem;
-        min-height: 52px;
+        max-width: 450px;
+        padding-left: 0.85rem;
+        padding-right: 0.4rem;
+        min-height: 44px;
+    }
+    
+    .inline-search {
+        max-width: 450px;
     }
 
     .grid, .projects-grid {
@@ -1094,10 +1100,11 @@ main {
 
     .search-wrapper { 
         width: 100%; 
+        max-width: 100%;
     }
 
     .inline-search {
-        max-width: none;
+        max-width: 100%;
         flex-basis: 100%;
     }
 
@@ -1136,9 +1143,9 @@ main {
     }
 
     .search-wrapper {
-        min-height: 48px;
-        padding-left: 1rem;
-        padding-right: 0.75rem;
+        min-height: 44px;
+        padding-left: 0.9rem;
+        padding-right: 0.5rem;
     }
 
     .search-bar { font-size: 1rem; }
@@ -1150,7 +1157,8 @@ main {
 
     .grid,
     .projects-grid,
-    .hero-stats { grid-template-columns: 1fr; }
+    .hero-stats,
+    .filter-group { grid-template-columns: 1fr; }
 
     .form-container { padding: 1rem; }
     .form-group input, .form-group textarea, .form-group select, .form-input {
@@ -1159,7 +1167,8 @@ main {
     }
 
     .filter-group { gap: 0.5rem; }
-    .filter-control { padding: 0.8rem 2.2rem 0.8rem 1rem; min-width: unset; }
+    .filter-control, .custom-select { min-width: unset; }
+    .filter-control { padding: 0.8rem 2.2rem 0.8rem 1rem; }
 
     .custom-select-trigger { padding: 0.7rem 1rem; }
     .custom-select-options { top: calc(100% + 0.35rem); }
@@ -1182,6 +1191,7 @@ main {
     position: relative;
     min-width: 180px;
     width: 100%;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -1216,8 +1226,8 @@ main {
     left: 0;
     right: 0;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15);
@@ -1226,7 +1236,8 @@ main {
     transform: translateY(-10px);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 50;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: 240px;
 }
 
 .custom-select.open .custom-select-options {
