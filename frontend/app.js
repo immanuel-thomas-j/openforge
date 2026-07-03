@@ -114,7 +114,10 @@ function setupProjectPage() {
     const sortFilter = document.getElementById("sort-filter");
     const resetButton = document.getElementById("reset-project-filters");
 
-    const triggerFetch = () => fetchProjects();
+    const triggerFetch = () => {
+  updateActiveFiltersSummary();
+  fetchProjects();
+};
     let debounceTimer;
 
     if (search) {
@@ -129,22 +132,31 @@ function setupProjectPage() {
     });
 
     if (resetButton) {
-        resetButton.addEventListener("click", () => {
-            if (search) search.value = "";
-            if (tagFilter) tagFilter.value = "";
-            if (difficultyFilter) difficultyFilter.value = "";
-            if (sortFilter) sortFilter.value = "";
-            fetchProjects();
-        });
+  resetButton.addEventListener("click", () => {
+    if (search) search.value = "";
+    if (tagFilter) tagFilter.value = "";
+    if (difficultyFilter) difficultyFilter.value = "";
+    if (sortFilter) sortFilter.value = "";
+
+    updateActiveFiltersSummary();
+
+    if (typeof setupCustomDropdowns === "function") {
+      setupCustomDropdowns();
     }
 
+    fetchProjects();
+  });
+}
+
     loadProjectFilters().then(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (search && params.get("query")) {
-            search.value = params.get("query");
-        }
-        fetchProjects();
-    });
+  const params = new URLSearchParams(window.location.search);
+  if (search && params.get("query")) {
+    search.value = params.get("query");
+  }
+
+  updateActiveFiltersSummary();
+  fetchProjects();
+});
 }
 
 function setupIssuePage() {
@@ -189,6 +201,65 @@ function getProjectFilters() {
         difficulty: document.getElementById("difficulty-filter")?.value || "",
         sort: document.getElementById("sort-filter")?.value || "",
     };
+}
+
+function updateActiveFiltersSummary() {
+  const summaryContainer = document.getElementById("active-filters-list");
+  if (!summaryContainer) return;
+
+  const filters = getProjectFilters();
+  const activeFilters = [];
+
+  if (filters.query) {
+    activeFilters.push({
+      label: "Search",
+      value: filters.query,
+    });
+  }
+
+  if (filters.tag) {
+    activeFilters.push({
+      label: "Technology",
+      value: filters.tag,
+    });
+  }
+
+  if (filters.difficulty) {
+    activeFilters.push({
+      label: "Difficulty",
+      value: filters.difficulty,
+    });
+  }
+
+  if (filters.sort) {
+    const sortLabels = {
+      name: "Name (A-Z)",
+      difficulty: "Difficulty",
+      oldest: "Oldest",
+    };
+
+    activeFilters.push({
+      label: "Sort",
+      value: sortLabels[filters.sort] || filters.sort,
+    });
+  }
+
+  summaryContainer.innerHTML = "";
+
+  if (!activeFilters.length) {
+    const emptyChip = document.createElement("span");
+    emptyChip.className = "filter-chip";
+    emptyChip.textContent = "None";
+    summaryContainer.appendChild(emptyChip);
+    return;
+  }
+
+  activeFilters.forEach((filter) => {
+    const chip = document.createElement("span");
+    chip.className = "filter-chip";
+    chip.textContent = `${filter.label}: ${filter.value}`;
+    summaryContainer.appendChild(chip);
+  });
 }
 
 function setMessage(elementId, text, type) {

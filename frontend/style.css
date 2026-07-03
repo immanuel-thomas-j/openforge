@@ -540,6 +540,43 @@ main {
     pointer-events: none;
 }
 
+.active-filters-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: -0.5rem 0 2rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.active-filters-summary h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.active-filters-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 /* ============================================================
    GRID & CARDS
    ============================================================ */
