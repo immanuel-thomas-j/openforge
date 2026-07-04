@@ -354,6 +354,15 @@ function renderProjects(projects) {
         link.href = project.githubUrl || '#';
         link.textContent = 'View on GitHub';
         actions.appendChild(link);
+
+        const bookmarkBtn = document.createElement('button');
+        bookmarkBtn.className = 'btn btn-bookmark';
+        bookmarkBtn.textContent = checkBookmarkStatus(project.id) ? '\u{1F31F} Bookmarked' : '\u{2B50} Bookmark';
+        bookmarkBtn.addEventListener('click', function () {
+            toggleBookmark(project.id, this);
+        });
+        actions.appendChild(bookmarkBtn);
+
         article.appendChild(actions);
 
         container.appendChild(article);
@@ -501,6 +510,28 @@ function setupCustomDropdowns() {
     document.addEventListener('click', function() {
         document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
     });
+}
+
+// ============================================================
+// BOOKMARK / SAVE FOR LATER (localStorage)
+// ============================================================
+
+function toggleBookmark(projectId, btn) {
+    const bookmarks = JSON.parse(localStorage.getItem('openforge_bookmarks') || '[]');
+    const idx = bookmarks.indexOf(projectId);
+    if (idx === -1) {
+        bookmarks.push(projectId);
+        btn.textContent = '\u{1F31F} Bookmarked';
+    } else {
+        bookmarks.splice(idx, 1);
+        btn.textContent = '\u{2B50} Bookmark';
+    }
+    localStorage.setItem('openforge_bookmarks', JSON.stringify(bookmarks));
+}
+
+function checkBookmarkStatus(projectId) {
+    const bookmarks = JSON.parse(localStorage.getItem('openforge_bookmarks') || '[]');
+    return bookmarks.includes(projectId);
 }
 
 function formatRepoLabel(repoLink) {
