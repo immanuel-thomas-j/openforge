@@ -1,6 +1,11 @@
 // Allow overriding the API URL from the page (useful when frontend is hosted separately)
 const API_URL = window.OPENFORGE_API_URL || "https://openforge-48r0.onrender.com/api";
 
+// Global State for Issue Pagination
+let allIssues = [];
+let currentIssuePage = 1;
+const ISSUES_PER_PAGE = 12;
+
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
     setupProjectPage();
@@ -289,12 +294,14 @@ function renderProjects(projects) {
     });
 }
 
-function renderIssues(issues) {
+function renderIssues(issues, replace = true) {
     const container = document.getElementById("issues-container");
     if (!container) return;
 
     setContainerBusy(container, false);
-    container.innerHTML = '';
+    if (replace) {
+        container.innerHTML = '';
+    }
 
     issues.forEach(issue => {
         const article = document.createElement('article');
@@ -336,6 +343,40 @@ function renderIssues(issues) {
 
         container.appendChild(article);
     });
+}
+
+function renderLoadMoreButton() {
+    const container = document.getElementById("issues-container");
+    if (!container) return;
+
+    // Remove existing if any
+    const existingBtn = document.getElementById("load-more-btn-container");
+    if (existingBtn) existingBtn.remove();
+
+    const endIdx = currentIssuePage * ISSUES_PER_PAGE;
+    if (endIdx < allIssues.length) {
+        const btnContainer = document.createElement("div");
+        btnContainer.className = "load-more-container";
+        btnContainer.id = "load-more-btn-container";
+        
+        const btn = document.createElement("button");
+        btn.className = "btn btn-primary load-more-btn";
+        btn.textContent = "Load More Issues";
+        btn.addEventListener("click", loadMoreIssues);
+        
+        btnContainer.appendChild(btn);
+        container.parentNode.insertBefore(btnContainer, container.nextSibling);
+    }
+}
+
+function loadMoreIssues() {
+    currentIssuePage++;
+    const startIdx = (currentIssuePage - 1) * ISSUES_PER_PAGE;
+    const endIdx = currentIssuePage * ISSUES_PER_PAGE;
+    const nextIssues = allIssues.slice(startIdx, endIdx);
+    
+    renderIssues(nextIssues, false);
+    renderLoadMoreButton();
 }
 
 function populateTagFilter(projects) {
@@ -525,10 +566,18 @@ async function fetchIssues() {
                     ? "Try a different search term or clear the filter."
                     : "Check back later or submit a project with open good-first issues.",
             });
+            // Also remove load more button if present
+            const existingBtn = document.getElementById("load-more-btn-container");
+            if (existingBtn) existingBtn.remove();
             return;
         }
 
-        renderIssues(payload);
+        allIssues = payload;
+        currentIssuePage = 1;
+        
+        const firstPage = allIssues.slice(0, ISSUES_PER_PAGE);
+        renderIssues(firstPage, true);
+        renderLoadMoreButton();
     } catch (error) {
         console.error("Error fetching issues:", error);
         renderStatusPanel(container, {
