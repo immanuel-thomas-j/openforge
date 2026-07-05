@@ -419,20 +419,13 @@ function populateTagFilter(projects) {
     });
 
     const selectedValue = tagFilter.value;
-
-    tagFilter.innerHTML = '';
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'All technologies';
-    tagFilter.appendChild(defaultOption);
-
+    
+    let optionsHtml = `<option value="">All technologies</option>`;
     Array.from(tags).sort((a, b) => a.localeCompare(b)).forEach((tag) => {
-        const option = document.createElement('option');
-        option.value = tag;
-        option.textContent = tag;
-        tagFilter.appendChild(option);
+        optionsHtml += `<option value="${tag}">${tag}</option>`;
     });
 
+    tagFilter.innerHTML = optionsHtml;
     tagFilter.value = selectedValue;
     // initialize custom dropdowns after the native select is populated
     if (typeof setupCustomDropdowns === 'function') {
