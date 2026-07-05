@@ -359,6 +359,20 @@ function renderProjects(projects) {
         link.href = project.githubUrl || '#';
         link.textContent = 'View on GitHub';
         actions.appendChild(link);
+
+        if (project.githubUrl) {
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'btn-copy';
+            copyBtn.setAttribute('aria-label', 'Copy repository URL');
+            copyBtn.title = 'Copy repository URL';
+            copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+            copyBtn.addEventListener('click', () => {
+                copyToClipboard(project.githubUrl);
+            });
+            actions.appendChild(copyBtn);
+        }
+
         article.appendChild(actions);
 
         container.appendChild(article);
@@ -729,5 +743,76 @@ async function submitProject(event) {
         setMessage(messageId, "Could not reach the server. Is the backend running?", "error");
     } finally {
         if (submitButton) submitButton.disabled = false;
+    }
+}
+
+// Toast state for debouncing/timer resets
+let toastTimeoutId = null;
+
+function showToast(message, isSuccess = true) {
+    let toast = document.getElementById('copy-toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'copy-toast-notification';
+        toast.className = 'copy-toast';
+        document.body.appendChild(toast);
+    }
+    
+    // Clear any existing timeout so multiple clicks reset the timer
+    if (toastTimeoutId) {
+        clearTimeout(toastTimeoutId);
+    }
+    
+    const icon = isSuccess ? '✅' : '❌';
+    toast.innerHTML = `<span class="copy-toast-icon">${icon}</span> <span>${message}</span>`;
+    
+    // Force reflow to restart transition if it was already showing
+    toast.classList.remove('show');
+    void toast.offsetWidth; 
+    
+    toast.classList.add('show');
+    
+    toastTimeoutId = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2500); // fade out after 2.5s
+}
+
+async function copyToClipboard(text) {
+    if (!text) return;
+    
+    // Try modern Clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast('Repository link copied!', true);
+            return;
+        } catch (err) {
+            console.error('Failed to copy text using Clipboard API: ', err);
+        }
+    }
+    
+    // Fallback for older browsers or insecure contexts
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        
+        // Move outside of screen to make it invisible
+        textArea.style.position = "absolute";
+        textArea.style.left = "-999999px";
+        
+        document.body.prepend(textArea);
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        
+        if (successful) {
+            showToast('Repository link copied!', true);
+        } else {
+            showToast('Failed to copy repository link.', false);
+        }
+    } catch (err) {
+        console.error('Fallback copy failed: ', err);
+        showToast('Failed to copy repository link.', false);
     }
 }

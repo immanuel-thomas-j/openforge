@@ -1368,3 +1368,68 @@ main {
         letter-spacing: -0.3px;
     }
 }
+
+/* ============================================================
+   COPY BUTTON & TOAST NOTIFICATION
+   ============================================================ */
+
+.btn-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-strong);
+    color: var(--text);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+    transform: scale(1.03);
+    background: #e5e5e5;
+    border-color: #d4d4d8;
+}
+
+.btn-copy:active {
+    transform: scale(0.98);
+}
+
+.btn-copy svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}
+
+.copy-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--surface);
+    color: var(--text);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(1rem);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+
+.copy-toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.copy-toast-icon {
+    font-size: 1.25rem;
+}
