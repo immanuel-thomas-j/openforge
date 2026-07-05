@@ -1,5 +1,10 @@
 // Allow overriding the API URL from the page (useful when frontend is hosted separately)
-const API_URL = window.OPENFORGE_API_URL || "https://openforge-48r0.onrender.com/api";
+const API_URL = window.OPENFORGE_API_URL || "http://127.0.0.1:5000/api";
+// BASE_URL (without /api suffix) for auth endpoints (/auth/login, /auth/logout, /auth/me)
+const BASE_URL = window.OPENFORGE_API_URL
+    ? window.OPENFORGE_API_URL.replace(/\/api\/?$/, "")
+    : "http://127.0.0.1:5000";
+let currentUser = null;
 
 // Global State for Issue Pagination
 let allIssues = [];
@@ -8,6 +13,7 @@ const ISSUES_PER_PAGE = 12;
 
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
+    setupAuth();
     setupProjectPage();
     setupIssuePage();
     setupAddProjectForm();
@@ -15,6 +21,130 @@ document.addEventListener("DOMContentLoaded", () => {
     // initialize custom dropdowns globally for pages with selects marked `filter-control`
     if (typeof setupCustomDropdowns === 'function') setupCustomDropdowns();
 });
+
+function getFetchOptions({ method = 'GET', headers = {}, body = null } = {}) {
+    const options = {
+        method,
+        credentials: 'include',
+        headers: {
+            ...headers,
+        },
+    };
+
+    if (body !== null) {
+        options.body = body;
+    }
+
+    return options;
+}
+
+async function setupAuth() {
+    await loadAuthState();
+    updateAddPageForAuth();
+}
+
+async function loadAuthState() {
+    const authContainer = document.getElementById("auth-nav-container");
+    if (!authContainer) return;
+
+    try {
+        const response = await fetch(`${BASE_URL}/auth/me`, getFetchOptions());
+        const payload = await response.json();
+
+        if (response.ok && payload && payload.login) {
+            currentUser = payload;
+        } else {
+            currentUser = null;
+        }
+    } catch (error) {
+        console.error("Error fetching auth state:", error);
+        currentUser = null;
+    }
+
+    renderAuthNav(currentUser);
+}
+
+function renderAuthNav(user) {
+    const authContainer = document.getElementById("auth-nav-container");
+    if (!authContainer) return;
+
+    if (user) {
+        authContainer.innerHTML = `
+            <div class="auth-menu">
+                <button type="button" class="auth-button auth-user" aria-haspopup="true" aria-expanded="false">
+                    <img src="${user.avatar_url || ''}" alt="${user.login || 'GitHub user'} avatar" class="auth-avatar" />
+                    <span>${user.login}</span>
+                </button>
+                <button type="button" id="logout-button" class="btn btn-ghost">Logout</button>
+            </div>
+        `;
+
+        const logoutButton = document.getElementById("logout-button");
+        if (logoutButton) {
+            logoutButton.addEventListener("click", handleLogout);
+        }
+    } else {
+        authContainer.innerHTML = `
+            <div class="auth-menu">
+                <button type="button" id="github-login-button" class="btn btn-primary btn-small">Sign in with GitHub</button>
+            </div>
+        `;
+
+        const loginButton = document.getElementById("github-login-button");
+        if (loginButton) {
+            loginButton.addEventListener("click", () => {
+                window.location.href = `${BASE_URL}/auth/login`;
+            });
+        }
+    }
+}
+
+async function handleLogout() {
+    try {
+        const response = await fetch(`${BASE_URL}/auth/logout`, getFetchOptions({ method: 'POST' }));
+        if (response.ok) {
+            currentUser = null;
+            renderAuthNav(null);
+            updateAddPageForAuth();
+        }
+    } catch (error) {
+        console.error("Error logging out:", error);
+    }
+}
+
+function updateAddPageForAuth() {
+    const authMessageContainer = document.getElementById("add-auth-message");
+    const form = document.getElementById("add-project-form");
+    const submitButton = form?.querySelector('button[type="submit"]');
+
+    if (!authMessageContainer || !form || !submitButton) return;
+
+    if (currentUser) {
+        authMessageContainer.innerHTML = `
+            <div class="auth-success">
+                Signed in as <strong>${currentUser.login}</strong>. You can now submit a project.
+            </div>
+        `;
+        submitButton.disabled = false;
+        form.classList.remove("disabled");
+    } else {
+        authMessageContainer.innerHTML = `
+            <div class="auth-warning">
+                <p>Please sign in with GitHub before submitting a project.</p>
+                <button type="button" class="btn btn-primary btn-small" id="add-github-login">Sign in with GitHub</button>
+            </div>
+        `;
+        submitButton.disabled = true;
+        form.classList.add("disabled");
+
+        const addLoginButton = document.getElementById("add-github-login");
+        if (addLoginButton) {
+            addLoginButton.addEventListener("click", () => {
+                window.location.href = `${BASE_URL}/auth/login`;
+            });
+        }
+    }
+}
 
 function setupNavigation() {
     const nav = document.querySelector(".site-nav");
@@ -571,7 +701,7 @@ async function loadProjectFilters() {
     if (!tagFilter) return;
 
     try {
-        const response = await fetch(`${API_URL}/projects`);
+        const response = await fetch(`${API_URL}/projects`, getFetchOptions());
         const projects = await response.json();
 
         if (!response.ok) throw new Error(projects.error || "Error loading filters");
@@ -592,6 +722,8 @@ async function fetchProjects() {
         loading: true,
     });
 
+    let wakingUpTimer = null;
+
     try {
         const filters = getProjectFilters();
         const params = new URLSearchParams();
@@ -601,18 +733,50 @@ async function fetchProjects() {
         });
 
         const url = params.toString() ? `${API_URL}/projects?${params.toString()}` : `${API_URL}/projects`;
-        const response = await fetch(url);
+        
+        // Start a timer to show "waking up" message if fetch takes >3s
+        const fetchPromise = fetch(url, getFetchOptions());
+        const wakingUpPromise = new Promise(resolve => {
+            wakingUpTimer = window.setTimeout(() => {
+                renderStatusPanel(container, {
+                    title: "Backend is waking up...",
+                    message: "Render free tier backend is starting. This may take 30 seconds on first load.",
+                    loading: true,
+                });
+                resolve(null);
+            }, 3000);
+        });
+
+        const response = await Promise.race([
+            fetchPromise,
+            wakingUpPromise.then(() => fetchPromise)
+        ]);
+
+        window.clearTimeout(wakingUpTimer);
+        
         const payload = await response.json();
 
-        if (!response.ok) throw new Error(payload.error || "Failed to load projects");
+        if (!response.ok) {
+            const errorMsg = payload.error || "Failed to load projects";
+            throw new Error(`${response.status}: ${errorMsg}`);
+        }
         if (!Array.isArray(payload)) throw new Error("Invalid project data received");
 
         renderProjects(payload);
     } catch (error) {
         console.error("Error fetching projects:", error);
+        let errorTitle = "Unable to load projects";
+        let errorMessage = "Make sure the Flask backend is running on https://openforge-48r0.onrender.com.";
+        
+        // Check if error message contains 403 status
+        if (error.message && error.message.includes("403")) {
+            errorTitle = "Rate limit exceeded";
+            errorMessage = "GitHub API rate limit reached. Please try again in a few minutes.";
+        }
+        
         renderStatusPanel(container, {
-            title: "Unable to load projects",
-            message: "Make sure the Flask backend is running on https://openforge-48r0.onrender.com.",
+            title: errorTitle,
+            message: errorMessage,
             variant: "is-error",
         });
     }
@@ -628,15 +792,40 @@ async function fetchIssues() {
         loading: true,
     });
 
+    let wakingUpTimer = null;
+
     try {
         const params = new URLSearchParams();
         if (search) params.set("query", search);
 
         const url = params.toString() ? `${API_URL}/issues?${params.toString()}` : `${API_URL}/issues`;
-        const response = await fetch(url);
+        
+        // Start a timer to show "waking up" message if fetch takes >3s
+        const fetchPromise = fetch(url, getFetchOptions());
+        const wakingUpPromise = new Promise(resolve => {
+            wakingUpTimer = window.setTimeout(() => {
+                renderStatusPanel(container, {
+                    title: "Backend is waking up...",
+                    message: "Render free tier backend is starting. This may take 30 seconds on first load.",
+                    loading: true,
+                });
+                resolve(null);
+            }, 3000);
+        });
+
+        const response = await Promise.race([
+            fetchPromise,
+            wakingUpPromise.then(() => fetchPromise)
+        ]);
+
+        window.clearTimeout(wakingUpTimer);
+        
         const payload = await response.json();
 
-        if (!response.ok) throw new Error(payload.error || "Failed to load issues");
+        if (!response.ok) {
+            const errorMsg = payload.error || "Failed to load issues";
+            throw new Error(`${response.status}: ${errorMsg}`);
+        }
         if (!Array.isArray(payload) || !payload.length) {
             renderStatusPanel(container, {
                 title: search ? "No matching issues" : "No issues available",
@@ -658,9 +847,18 @@ async function fetchIssues() {
         renderLoadMoreButton();
     } catch (error) {
         console.error("Error fetching issues:", error);
+        let errorTitle = "Unable to load issues";
+        let errorMessage = "GitHub may be unavailable or the rate limit was exceeded. Try again shortly.";
+        
+        // Check if error message contains 403 status (rate limit)
+        if (error.message && error.message.includes("403")) {
+            errorTitle = "Rate limit exceeded";
+            errorMessage = "GitHub API rate limit reached. Please try again in a few minutes.";
+        }
+        
         renderStatusPanel(container, {
-            title: "Unable to load issues",
-            message: "GitHub may be unavailable or the rate limit was exceeded. Try again shortly.",
+            title: errorTitle,
+            message: errorMessage,
             variant: "is-error",
         });
     }
@@ -690,13 +888,13 @@ async function submitProject(event) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/projects`, {
+        const response = await fetch(`${API_URL}/projects`, getFetchOptions({
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(projectData),
-        });
+        }));
 
         const payload = await response.json();
 

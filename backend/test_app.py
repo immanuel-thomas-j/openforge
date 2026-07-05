@@ -71,6 +71,9 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(payload[0]["name"], "Beta")
 
     def test_add_project_validates_input(self):
+        with self.client.session_transaction() as sess:
+            sess["user"] = {"login": "testuser", "avatar_url": "https://example.com/avatar.png", "id": 999}
+
         response = self.client.post(
             "/api/projects",
             json={
@@ -88,6 +91,9 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertIn("githubUrl", payload["fields"])
 
     def test_add_project_persists_new_project(self):
+        with self.client.session_transaction() as sess:
+            sess["user"] = {"login": "testuser", "avatar_url": "https://example.com/avatar.png", "id": 999}
+
         response = self.client.post(
             "/api/projects",
             json={
@@ -101,9 +107,45 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         payload = response.get_json()
         self.assertEqual(payload["project"]["id"], 3)
+        self.assertEqual(payload["project"]["submittedBy"], "testuser")
         saved = json.loads(self.data_file.read_text(encoding="utf-8"))
         self.assertEqual(saved["next_project_id"], 4)
         self.assertEqual(len(saved["projects"]), 3)
+
+    def test_add_project_returns_401_when_not_logged_in(self):
+        response = self.client.post(
+            "/api/projects",
+            json={
+                "name": "Gamma",
+                "description": "A new project.",
+                "githubUrl": "https://github.com/example/gamma",
+                "tags": "Python, Tools",
+                "difficulty": "Medium",
+            },
+        )
+        self.assertEqual(response.status_code, 401)
+        payload = response.get_json()
+        self.assertEqual(payload["error"], "Authentication required. Please sign in with GitHub.")
+
+    def test_add_project_with_session_saves_submitter(self):
+        with self.client.session_transaction() as sess:
+            sess["user"] = {"login": "testuser", "avatar_url": "https://example.com/avatar.png", "id": 999}
+
+        response = self.client.post(
+            "/api/projects",
+            json={
+                "name": "Gamma",
+                "description": "A new project.",
+                "githubUrl": "https://github.com/example/gamma",
+                "tags": "Python, Tools",
+                "difficulty": "Medium",
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.get_json()
+        self.assertEqual(payload["project"]["submittedBy"], "testuser")
+        self.assertEqual(payload["project"]["id"], 3)
 
     @patch.object(app_module.requests, "get")
     def test_get_issues_fetches_live_issues(self, mock_get):
