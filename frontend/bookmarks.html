@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Find beginner-friendly good-first issues from OpenForge repositories, pulled live from GitHub.">
-    <title>OpenForge | Beginner Issues</title>
+    <meta name="description" content="View your bookmarked open-source projects on OpenForge. Save projects for later and track your favorites.">
+    <title>OpenForge | Bookmarks</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -29,8 +29,8 @@
             <ul class="nav-links" id="primary-nav">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="explore.html">Explore Projects</a></li>
-                <li><a href="bookmarks.html">Bookmarks</a></li>
-                <li><a href="issues.html" class="active" aria-current="page">Beginner Issues</a></li>
+                <li><a href="bookmarks.html" class="active" aria-current="page">Bookmarks</a></li>
+                <li><a href="issues.html">Beginner Issues</a></li>
                 <li><a href="add.html" class="nav-btn">Add Project</a></li>
             </ul>
         </div>
@@ -38,29 +38,16 @@
 
     <main id="main-content" class="container page-spacing max-width-xl">
         <header class="page-header">
-            <h2>Beginner-Friendly Issues</h2>
-            <p class="text-muted text-lg">Curated "good first issue" opportunities pulled directly from OpenForge repositories. Results are temporarily cached to keep things fast.</p>
+            <h2>Bookmarked Projects</h2>
+            <p class="text-muted text-lg">Projects you have saved for later. Remove them anytime or explore new ones.</p>
         </header>
 
-        <div class="controls-bar">
-            <div class="search-wrapper inline-search" role="search" aria-label="Search issues">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input id="issue-search" class="search-bar" type="search" placeholder="Search issues by title or language..." aria-label="Search issues">
+        <div class="grid projects-grid" id="bookmarks-container" aria-live="polite">
+            <div class="status-panel" role="status">
+                <strong>No bookmarks added yet.</strong>
+                <p>Browse projects and click the bookmark button to save them here.</p>
             </div>
-
-            <button type="button" id="refresh-issues" class="btn btn-secondary btn-icon" title="Refresh live feed" aria-label="Refresh live feed">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <polyline points="1 20 1 14 7 14"></polyline>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-            </button>
         </div>
-
-        <div class="grid projects-grid" id="issues-container" aria-live="polite" aria-busy="true"></div>
     </main>
 
     <footer class="site-footer">
@@ -77,5 +64,6 @@
 
     <script src="config.js"></script>
     <script src="app.js"></script>
+    <script src="bookmarks.js"></script>
 </body>
 </html>
