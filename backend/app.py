@@ -2,12 +2,14 @@ import json
 import os
 import threading
 import time
+import logging
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 import requests
 from flask_cors import CORS
+import redis
 
 BACKEND_DIR = os.path.dirname(__file__)
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
@@ -26,6 +28,21 @@ GITHUB_ISSUE_SEARCH_URL = "https://api.github.com/search/issues"
 GITHUB_ISSUE_LABEL = 'label:"good first issue"'
 ISSUE_CACHE_TTL_SECONDS = 15 * 60
 DATA_LOCK = threading.RLock()
+
+# Initialize Redis Cache
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    try:
+        redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+        redis_client.ping()
+        logging.info("Connected to Redis successfully.")
+    except Exception as e:
+        logging.error(f"Failed to connect to Redis: {e}")
+        redis_client = None
+else:
+    redis_client = None
+
+# Fallback in-memory cache if Redis is unavailable
 ISSUE_CACHE_LOCK = threading.Lock()
 ISSUE_CACHE = {}
 
@@ -207,6 +224,15 @@ def _github_request_headers():
 
 
 def _get_cached_issues(cache_key):
+    if redis_client:
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+            return None
+        except Exception as e:
+            logging.error(f"Redis get error: {e}")
+
     with ISSUE_CACHE_LOCK:
         cached = ISSUE_CACHE.get(cache_key)
         if not cached:
@@ -219,11 +245,27 @@ def _get_cached_issues(cache_key):
 
 
 def _get_issue_cache_entry(cache_key):
+    if redis_client:
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return {"issues": json.loads(cached_data), "expires_at": float('inf')}
+            return None
+        except Exception as e:
+            logging.error(f"Redis get error: {e}")
+
     with ISSUE_CACHE_LOCK:
         return ISSUE_CACHE.get(cache_key)
 
 
 def _set_cached_issues(cache_key, issues):
+    if redis_client:
+        try:
+            redis_client.setex(cache_key, ISSUE_CACHE_TTL_SECONDS, json.dumps(issues))
+            return
+        except Exception as e:
+            logging.error(f"Redis set error: {e}")
+
     with ISSUE_CACHE_LOCK:
         ISSUE_CACHE[cache_key] = {
             "issues": issues,
@@ -232,6 +274,13 @@ def _set_cached_issues(cache_key, issues):
 
 
 def _clear_issue_cache():
+    if redis_client:
+        try:
+            redis_client.flushdb()
+            return
+        except Exception as e:
+            logging.error(f"Redis flush error: {e}")
+
     with ISSUE_CACHE_LOCK:
         ISSUE_CACHE.clear()
 
