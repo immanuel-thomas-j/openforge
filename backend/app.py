@@ -46,6 +46,10 @@ else:
 ISSUE_CACHE_LOCK = threading.Lock()
 ISSUE_CACHE = {}
 
+# Reuse a persistent HTTP session for GitHub API calls (connection pooling / keep-alive)
+_github_session = requests.Session()
+_github_session.headers.update({"Accept": "application/vnd.github.v3+json"})
+
 
 def _default_data():
     return {"projects": [], "issues": [], "next_project_id": 1}
@@ -214,7 +218,8 @@ def _build_issue_query(repo_slug, search_term=""):
 
 
 def _github_request_headers():
-    headers = {"Accept": "application/vnd.github.v3+json"}
+    """Return per-request headers (Authorization may change at runtime)."""
+    headers = {}
     github_token = os.getenv("GITHUB_TOKEN", "").strip()
 
     if github_token:
@@ -295,7 +300,7 @@ def _clear_issue_cache():
 
 
 def _fetch_repo_issues(repo_slug, search_term=""):
-    response = requests.get(
+    response = _github_session.get(
         GITHUB_ISSUE_SEARCH_URL,
         params={
             "q": _build_issue_query(repo_slug, search_term),
