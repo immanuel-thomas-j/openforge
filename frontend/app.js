@@ -120,9 +120,9 @@ function setupProjectPage() {
     const resetButton = document.getElementById("reset-project-filters");
 
     const triggerFetch = () => {
-  updateActiveFiltersSummary();
-  fetchProjects();
-};
+        updateActiveFiltersSummary();
+        fetchProjects();
+    };
     let debounceTimer;
 
     if (search) {
@@ -137,31 +137,31 @@ function setupProjectPage() {
     });
 
     if (resetButton) {
-  resetButton.addEventListener("click", () => {
-    if (search) search.value = "";
-    if (tagFilter) tagFilter.value = "";
-    if (difficultyFilter) difficultyFilter.value = "";
-    if (sortFilter) sortFilter.value = "";
+        resetButton.addEventListener("click", () => {
+            if (search) search.value = "";
+            if (tagFilter) tagFilter.value = "";
+            if (difficultyFilter) difficultyFilter.value = "";
+            if (sortFilter) sortFilter.value = "";
 
-    updateActiveFiltersSummary();
+            updateActiveFiltersSummary();
 
-    if (typeof setupCustomDropdowns === "function") {
-      setupCustomDropdowns();
+            if (typeof setupCustomDropdowns === "function") {
+                setupCustomDropdowns();
+            }
+
+            fetchProjects();
+        });
     }
 
-    fetchProjects();
-  });
-}
-
     loadProjectFilters().then(() => {
-  const params = new URLSearchParams(window.location.search);
-  if (search && params.get("query")) {
-    search.value = params.get("query");
-  }
+        const params = new URLSearchParams(window.location.search);
+        if (search && params.get("query")) {
+            search.value = params.get("query");
+        }
 
-  updateActiveFiltersSummary();
-  fetchProjects();
-});
+        updateActiveFiltersSummary();
+        fetchProjects();
+    });
 }
 
 function setupIssuePage() {
@@ -209,62 +209,62 @@ function getProjectFilters() {
 }
 
 function updateActiveFiltersSummary() {
-  const summaryContainer = document.getElementById("active-filters-list");
-  if (!summaryContainer) return;
+    const summaryContainer = document.getElementById("active-filters-list");
+    if (!summaryContainer) return;
 
-  const filters = getProjectFilters();
-  const activeFilters = [];
+    const filters = getProjectFilters();
+    const activeFilters = [];
 
-  if (filters.query) {
-    activeFilters.push({
-      label: "Search",
-      value: filters.query,
+    if (filters.query) {
+        activeFilters.push({
+            label: "Search",
+            value: filters.query,
+        });
+    }
+
+    if (filters.tag) {
+        activeFilters.push({
+            label: "Technology",
+            value: filters.tag,
+        });
+    }
+
+    if (filters.difficulty) {
+        activeFilters.push({
+            label: "Difficulty",
+            value: filters.difficulty,
+        });
+    }
+
+    if (filters.sort) {
+        const sortLabels = {
+            name: "Name (A-Z)",
+            difficulty: "Difficulty",
+            oldest: "Oldest",
+        };
+
+        activeFilters.push({
+            label: "Sort",
+            value: sortLabels[filters.sort] || filters.sort,
+        });
+    }
+
+    summaryContainer.innerHTML = "";
+
+    if (!activeFilters.length) {
+        const emptyChip = document.createElement("span");
+        emptyChip.className = "filter-chip";
+        emptyChip.textContent = "None";
+        summaryContainer.appendChild(emptyChip);
+        return;
+    }
+
+    activeFilters.forEach((filter) => {
+        const chip = document.createElement("span");
+        chip.className = "filter-chip";
+        chip.textContent = `${filter.label}: ${filter.value}`;
+        summaryContainer.appendChild(chip);
     });
-  }
-
-  if (filters.tag) {
-    activeFilters.push({
-      label: "Technology",
-      value: filters.tag,
-    });
-  }
-
-  if (filters.difficulty) {
-    activeFilters.push({
-      label: "Difficulty",
-      value: filters.difficulty,
-    });
-  }
-
-  if (filters.sort) {
-    const sortLabels = {
-      name: "Name (A-Z)",
-      difficulty: "Difficulty",
-      oldest: "Oldest",
-    };
-
-    activeFilters.push({
-      label: "Sort",
-      value: sortLabels[filters.sort] || filters.sort,
-    });
-  }
-
-  summaryContainer.innerHTML = "";
-
-  if (!activeFilters.length) {
-    const emptyChip = document.createElement("span");
-    emptyChip.className = "filter-chip";
-    emptyChip.textContent = "None";
-    summaryContainer.appendChild(emptyChip);
-    return;
-  }
-
-  activeFilters.forEach((filter) => {
-    const chip = document.createElement("span");
-    chip.className = "filter-chip";
-    chip.textContent = `${filter.label}: ${filter.value}`;
-    summaryContainer.appendChild(chip);
-  });
 }
 
 function setMessage(elementId, text, type) {
@@ -282,7 +282,7 @@ function renderStatusPanel(container, { title, message, variant = "", loading = 
     if (!container) return;
 
     setContainerBusy(container, loading);
-    
+
     let content = '';
     if (loading) content += `<div class="spinner" aria-hidden="true"></div>`;
     if (title) content += `<strong>${title}</strong>`;
@@ -311,6 +311,7 @@ function renderProjects(projects) {
     container.innerHTML = '';
 
     if (!projects.length) {
+
         renderStatusPanel(container, {
             title: "No projects found",
             message: "Try adjusting your search or filters to discover more repositories.",
@@ -429,12 +430,12 @@ function renderLoadMoreButton() {
         const btnContainer = document.createElement("div");
         btnContainer.className = "load-more-container";
         btnContainer.id = "load-more-btn-container";
-        
+
         const btn = document.createElement("button");
         btn.className = "btn btn-primary load-more-btn";
         btn.textContent = "Load More Issues";
         btn.addEventListener("click", loadMoreIssues);
-        
+
         btnContainer.appendChild(btn);
         container.parentNode.insertBefore(btnContainer, container.nextSibling);
     }
@@ -445,7 +446,7 @@ function loadMoreIssues() {
     const startIdx = (currentIssuePage - 1) * ISSUES_PER_PAGE;
     const endIdx = currentIssuePage * ISSUES_PER_PAGE;
     const nextIssues = allIssues.slice(startIdx, endIdx);
-    
+
     renderIssues(nextIssues, false);
     renderLoadMoreButton();
 }
@@ -520,7 +521,7 @@ function setupCustomDropdowns() {
             optEl.textContent = option.text;
             optEl.dataset.value = option.value;
 
-            optEl.addEventListener('click', function(e) {
+            optEl.addEventListener('click', function (e) {
                 e.stopPropagation();
                 select.value = this.dataset.value;
                 trigger.querySelector('span').textContent = this.textContent;
@@ -537,7 +538,7 @@ function setupCustomDropdowns() {
         customSelect.appendChild(optionsContainer);
         select.parentNode.insertBefore(customSelect, select.nextSibling);
 
-        trigger.addEventListener('click', function(e) {
+        trigger.addEventListener('click', function (e) {
             e.stopPropagation();
             document.querySelectorAll('.custom-select').forEach(cs => {
                 if (cs !== customSelect) cs.classList.remove('open');
@@ -546,7 +547,7 @@ function setupCustomDropdowns() {
         });
     });
 
-    document.addEventListener('click', function() {
+    document.addEventListener('click', function () {
         document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
     });
 }
@@ -583,14 +584,26 @@ async function loadProjectFilters() {
     }
 }
 
+//me
+function renderProjectSkeletons(container, count = 6) {
+    container.innerHTML = "";
+
+    for (let i = 0; i < count; i++) {
+        container.innerHTML += `
+            <article class="card skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-button"></div>
+            </article>
+        `;
+    }
+}
+
 async function fetchProjects() {
     const container = document.getElementById("projects-container");
 
-    renderStatusPanel(container, {
-        title: "Loading projects",
-        message: "Fetching curated repositories from OpenForge...",
-        loading: true,
-    });
+    renderProjectSkeletons(container);
 
     try {
         const filters = getProjectFilters();
@@ -622,11 +635,25 @@ async function fetchIssues() {
     const container = document.getElementById("issues-container");
     const search = document.getElementById("issue-search")?.value.trim() || "";
 
-    renderStatusPanel(container, {
-        title: "Loading issues",
-        message: "Pulling beginner-friendly issues from submitted repositories...",
-        loading: true,
-    });
+    //me
+    function renderIssueSkeletons(container, count = 6) {
+        container.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+
+            container.innerHTML += `
+        <article class="card skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-button"></div>
+        </article>
+        `;
+
+        }
+    }
+    //me
+
+    renderIssueSkeletons(container);
 
     try {
         const params = new URLSearchParams();
@@ -652,7 +679,7 @@ async function fetchIssues() {
 
         allIssues = payload;
         currentIssuePage = 1;
-        
+
         const firstPage = allIssues.slice(0, ISSUES_PER_PAGE);
         renderIssues(firstPage, true);
         renderLoadMoreButton();
