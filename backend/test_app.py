@@ -105,7 +105,7 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(saved["next_project_id"], 4)
         self.assertEqual(len(saved["projects"]), 3)
 
-    @patch.object(app_module.requests, "get")
+    @patch.object(app_module._github_session, "get")
     def test_get_issues_fetches_live_issues(self, mock_get):
         alpha_response = Mock()
         alpha_response.raise_for_status.return_value = None
@@ -146,12 +146,12 @@ class OpenForgeApiTestCase(unittest.TestCase):
         )
         self.assertEqual(
             mock_get.call_args_list[0].kwargs["headers"],
-            {"Accept": "application/vnd.github.v3+json"},
+            {},
         )
         self.assertEqual(mock_get.call_count, 2)
 
     @patch.dict("os.environ", {"GITHUB_TOKEN": "ghp_testtoken"}, clear=False)
-    @patch.object(app_module.requests, "get")
+    @patch.object(app_module._github_session, "get")
     def test_get_issues_sends_github_token_when_available(self, mock_get):
         mock_response = Mock()
         mock_response.raise_for_status.return_value = None
@@ -163,13 +163,12 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(
             mock_get.call_args.kwargs["headers"],
             {
-                "Accept": "application/vnd.github.v3+json",
                 "Authorization": "Bearer ghp_testtoken",
             },
         )
         self.assertEqual(mock_get.call_count, 2)
 
-    @patch.object(app_module.requests, "get")
+    @patch.object(app_module._github_session, "get")
     def test_get_issues_uses_cache_on_repeat_requests(self, mock_get):
         mock_response = Mock()
         mock_response.raise_for_status.return_value = None
@@ -183,7 +182,7 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(second_response.status_code, 200)
         self.assertEqual(mock_get.call_count, 2)
 
-    @patch.object(app_module.requests, "get")
+    @patch.object(app_module._github_session, "get")
     def test_get_issues_returns_error_when_github_fails(self, mock_get):
         mock_get.side_effect = app_module.requests.exceptions.RequestException("boom")
 
@@ -192,7 +191,7 @@ class OpenForgeApiTestCase(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload, [])
 
-    @patch.object(app_module.requests, "get")
+    @patch.object(app_module._github_session, "get")
     def test_get_issues_falls_back_to_stale_cache(self, mock_get):
         with patch.object(
             app_module,
