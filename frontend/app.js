@@ -6,6 +6,10 @@ let allIssues = [];
 let currentIssuePage = 1;
 const ISSUES_PER_PAGE = 12;
 
+// Global State for Autocomplete (client-side only, reuses existing /projects data)
+let heroSearchIndex = null;
+let projectSearchIndex = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
     setupProjectPage();
@@ -132,11 +136,36 @@ function setupHeroSearch() {
         window.location.href = url;
     };
 
-    search.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            goToExplore();
+    // Lazily fetch project data (name + tags) for autocomplete the first time
+    // the user interacts with the hero search box. Reuses the existing
+    // /projects endpoint, so no backend changes are required.
+    const ensureHeroSearchIndex = async () => {
+        if (heroSearchIndex) return heroSearchIndex;
+        try {
+            const response = await fetch(`${API_URL}/projects`);
+            const projects = await response.json();
+            if (response.ok && Array.isArray(projects)) {
+                heroSearchIndex = buildSearchIndex(projects);
+            }
+        } catch (error) {
+            console.error("Error loading autocomplete data:", error);
         }
+        return heroSearchIndex;
+    };
+
+    search.addEventListener("focus", async () => {
+        await ensureHeroSearchIndex();
+        // If the index finished loading while the user was already typing,
+        // refresh suggestions immediately instead of waiting for the next keystroke.
+        if (document.activeElement === search && search.value.trim()) {
+            search.dispatchEvent(new Event("input"));
+        }
+    }, { once: true });
+
+    attachAutocomplete(search, {
+        getIndex: () => heroSearchIndex,
+        onSelect: goToExplore,
+        onSubmit: goToExplore,
     });
 
     const searchBtn = document.querySelector(".btn-search");
@@ -165,6 +194,14 @@ function setupProjectPage() {
         search.addEventListener("input", () => {
             window.clearTimeout(debounceTimer);
             debounceTimer = window.setTimeout(triggerFetch, 180);
+        });
+
+        // Autocomplete reuses the project list already fetched by
+        // loadProjectFilters() below, so no extra network calls are made.
+        attachAutocomplete(search, {
+            getIndex: () => projectSearchIndex,
+            onSelect: () => triggerFetch(),
+            onSubmit: () => triggerFetch(),
         });
     }
 
@@ -600,6 +637,249 @@ function formatRepoLabel(repoLink) {
 }
 
 // ============================================================
+// AUTOCOMPLETE ENGINE
+// Client-side only: reuses project data already fetched via the
+// existing /projects endpoint. No backend changes, no dependencies.
+// ============================================================
+
+function buildSearchIndex(projects) {
+    return (projects || []).map((project) => ({
+        name: project.name || "",
+        tags: project.tags || [],
+    }));
+}
+
+function getAutocompleteMatches(query, index, limit = 8) {
+    if (!query || !index || !index.length) return [];
+
+    const q = query.toLowerCase();
+    const seen = new Set();
+    const matches = [];
+
+    // Project name matches first
+    index.forEach((item) => {
+        const key = item.name.toLowerCase();
+        if (item.name && key.includes(q) && !seen.has(key)) {
+            matches.push({ type: "project", value: item.name });
+            seen.add(key);
+        }
+    });
+
+    // Then technology/tag matches
+    index.forEach((item) => {
+        (item.tags || []).forEach((tag) => {
+            const key = tag.toLowerCase();
+            if (tag && key.includes(q) && !seen.has(key)) {
+                matches.push({ type: "tag", value: tag });
+                seen.add(key);
+            }
+        });
+    });
+
+    return matches.slice(0, limit);
+}
+
+function ensureAutocompleteStyles() {
+    if (document.getElementById("autocomplete-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "autocomplete-styles";
+    style.textContent = `
+        .autocomplete-list {
+            position: absolute;
+            z-index: 1000;
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #e5e5e5);
+            border-radius: var(--radius-md, 12px);
+            max-height: 280px;
+            overflow-y: auto;
+            list-style: none;
+            margin: 0;
+            padding: 6px;
+            box-shadow: var(--shadow-lg, 0 10px 30px -10px rgba(0, 0, 0, 0.08));
+            box-sizing: border-box;
+            font-family: inherit;
+            color: var(--text, #0a0a0a);
+        }
+        .autocomplete-list[hidden] { display: none; }
+        .autocomplete-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--radius-sm, 8px);
+            cursor: pointer;
+            font-size: 0.92rem;
+            color: var(--text, #0a0a0a);
+        }
+        .autocomplete-option:hover,
+        .autocomplete-option.is-active {
+            background: var(--surface-strong, #f4f4f5);
+        }
+        .autocomplete-option-type {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-soft, #737373);
+            white-space: nowrap;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function positionAutocompleteList(input, list) {
+    const rect = input.getBoundingClientRect();
+    list.style.left = `${rect.left + window.scrollX}px`;
+    list.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    list.style.width = `${rect.width}px`;
+}
+
+/**
+ * Wires a text input up with a live, keyboard-navigable suggestion list.
+ *
+ * IMPORTANT: this never modifies the input's existing DOM structure (no
+ * wrapping, no reparenting) so it can't interfere with the page's existing
+ * layout/CSS for the search bar. The suggestion list is appended to
+ * <body> and positioned to float under the input via getBoundingClientRect().
+ *
+ * @param {HTMLInputElement} input
+ * @param {Object} options
+ * @param {() => Array} options.getIndex - returns the current searchable index (array of {name, tags})
+ * @param {(value: string) => void} options.onSelect - called after a suggestion is chosen and the field is populated
+ * @param {() => void} [options.onSubmit] - called on Enter when no suggestion is highlighted (default search behavior)
+ */
+function attachAutocomplete(input, { getIndex, onSelect, onSubmit }) {
+    if (!input) return;
+
+    ensureAutocompleteStyles();
+
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-autocomplete", "list");
+    input.setAttribute("aria-expanded", "false");
+    input.setAttribute("autocomplete", "off");
+
+    const list = document.createElement("ul");
+    list.className = "autocomplete-list";
+    list.hidden = true;
+    list.setAttribute("role", "listbox");
+    document.body.appendChild(list);
+
+    let currentMatches = [];
+    let activeIndex = -1;
+
+    const closeList = () => {
+        list.hidden = true;
+        list.innerHTML = "";
+        currentMatches = [];
+        activeIndex = -1;
+        input.setAttribute("aria-expanded", "false");
+    };
+
+    const renderMatches = () => {
+        list.innerHTML = "";
+
+        if (!currentMatches.length) {
+            closeList();
+            return;
+        }
+
+        currentMatches.forEach((match, index) => {
+            const item = document.createElement("li");
+            item.className = "autocomplete-option" + (index === activeIndex ? " is-active" : "");
+            item.setAttribute("role", "option");
+            item.dataset.index = String(index);
+
+            const label = document.createElement("span");
+            label.textContent = match.value;
+            item.appendChild(label);
+
+            const typeTag = document.createElement("span");
+            typeTag.className = "autocomplete-option-type";
+            typeTag.textContent = match.type === "tag" ? "Tech" : "Project";
+            item.appendChild(typeTag);
+
+            // mousedown (not click) fires before the input's blur event,
+            // so the selection isn't lost when the list closes
+            item.addEventListener("mousedown", (event) => {
+                event.preventDefault();
+                selectMatch(match);
+            });
+
+            list.appendChild(item);
+        });
+
+        positionAutocompleteList(input, list);
+        list.hidden = false;
+        input.setAttribute("aria-expanded", "true");
+    };
+
+    const selectMatch = (match) => {
+        input.value = match.value;
+        closeList();
+        if (typeof onSelect === "function") onSelect(match.value);
+    };
+
+    const refreshMatches = () => {
+        const index = getIndex();
+        currentMatches = getAutocompleteMatches(input.value.trim(), index);
+        activeIndex = -1;
+        renderMatches();
+    };
+
+    input.addEventListener("input", refreshMatches);
+
+    // Re-show suggestions when the field regains focus (e.g. after Escape
+    // closed the list, or after clicking away and back) as long as it
+    // still has text in it.
+    input.addEventListener("focus", () => {
+        if (input.value.trim()) refreshMatches();
+    });
+
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown") {
+            if (list.hidden || !currentMatches.length) return;
+            event.preventDefault();
+            activeIndex = (activeIndex + 1) % currentMatches.length;
+            renderMatches();
+        } else if (event.key === "ArrowUp") {
+            if (list.hidden || !currentMatches.length) return;
+            event.preventDefault();
+            activeIndex = (activeIndex - 1 + currentMatches.length) % currentMatches.length;
+            renderMatches();
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            if (!list.hidden && activeIndex >= 0 && currentMatches[activeIndex]) {
+                selectMatch(currentMatches[activeIndex]);
+            } else {
+                closeList();
+                if (typeof onSubmit === "function") onSubmit();
+            }
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            closeList();
+        }
+    });
+
+    // Keep the floating list glued under the input as the page scrolls/resizes
+    window.addEventListener(
+        "scroll",
+        () => {
+            if (!list.hidden) positionAutocompleteList(input, list);
+        },
+        true
+    );
+    window.addEventListener("resize", () => {
+        if (!list.hidden) positionAutocompleteList(input, list);
+    });
+
+    document.addEventListener("click", (event) => {
+        if (event.target === input || list.contains(event.target)) return;
+        closeList();
+    });
+}
+
+// ============================================================
 // API CALLS
 // ============================================================
 
@@ -613,6 +893,10 @@ async function loadProjectFilters() {
 
         if (!response.ok) throw new Error(projects.error || "Error loading filters");
         if (!Array.isArray(projects)) throw new Error("Invalid project data received");
+
+        // Reuse this already-fetched project list to power the search-bar
+        // autocomplete on the explore page, instead of making another call.
+        projectSearchIndex = buildSearchIndex(projects);
 
         populateTagFilter(projects);
     } catch (error) {
