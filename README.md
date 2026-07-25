@@ -311,11 +311,11 @@ Thank you to all the contributors who have helped make OpenForge awesome!
 *   **Lamiya** (`@lamiyacodes`) — Structured Page Footer
 *   **Harsh** (`@harsh160311`) — Local Bookmarks Feature
 *   **Revati Kadam** (`@revatikadam0607`) — Landing Page UI Adjustments
-*   **Jidnyasa Patil** (`@Jidnyasa-Patil`)
-*   **Kavya A Y** (`@Kavya-A-Y`)
-*   **Manisa Nayak** (`@Manisa-Nayak`)
-*   **Piush Gogi** (`@Piush-Gogi`)
-*   **Purvi Chopra** (`@Purvi-Chopra`)
+*   **Jidnyasa Patil** (`@Jidnyasa-Patil`) — Active filters summary UI
+*   **Kavya A Y** (`@Kavya-A-Y`) — Mobile search placeholder fix
+*   **Manisa Nayak** (`@Manisa-Nayak`) — Mobile filter responsiveness fix
+*   **Piush Gogi** (`@Piush-Gogi`) — XSS‑safe tag escaping
+*   **Purvi Chopra** (`@Purvi-Chopra`) — Loading skeletons UI
 
 ---
 
