@@ -228,7 +228,10 @@ def _get_cached_issues(cache_key):
         try:
             cached_data = redis_client.get(cache_key)
             if cached_data:
-                return json.loads(cached_data)
+                entry = json.loads(cached_data)
+                if time.time() > entry.get("expires_at", 0):
+                    return None
+                return entry.get("issues")
             return None
         except Exception as e:
             logging.error(f"Redis get error: {e}")
@@ -249,7 +252,8 @@ def _get_issue_cache_entry(cache_key):
         try:
             cached_data = redis_client.get(cache_key)
             if cached_data:
-                return {"issues": json.loads(cached_data), "expires_at": float('inf')}
+                entry = json.loads(cached_data)
+                return {"issues": entry.get("issues"), "expires_at": entry.get("expires_at")}
             return None
         except Exception as e:
             logging.error(f"Redis get error: {e}")
@@ -261,7 +265,12 @@ def _get_issue_cache_entry(cache_key):
 def _set_cached_issues(cache_key, issues):
     if redis_client:
         try:
-            redis_client.setex(cache_key, ISSUE_CACHE_TTL_SECONDS, json.dumps(issues))
+            entry = {
+                "issues": issues,
+                "expires_at": time.time() + ISSUE_CACHE_TTL_SECONDS
+            }
+            # Keep key in Redis for up to 24 hours to support stale cache fallback
+            redis_client.setex(cache_key, 24 * 60 * 60, json.dumps(entry))
             return
         except Exception as e:
             logging.error(f"Redis set error: {e}")
