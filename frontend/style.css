@@ -691,17 +691,67 @@ main {
     min-height: 100%;
     padding: 1.35rem;
     border-radius: var(--radius-lg);
-    background: var(--surface);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--card-border);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.3s ease,
-        border-color 0.3s ease;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card:hover {
+[data-theme="dark"] .card {
+    background: rgba(23, 23, 23, 0.75);
+}
+
+@supports not (backdrop-filter: blur(12px)) {
+    .card {
+        background: var(--surface);
+    }
+}
+
+.card:hover,
+.card:focus-within {
     transform: translateY(-6px);
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.12);
     border-color: var(--card-border-hover);
+}
+
+/* Contextual Glowing Hover Accents */
+.card.card-easy:hover,
+.card.card-easy:focus-within {
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 16px 36px -8px rgba(16, 185, 129, 0.22), 0 4px 12px -2px rgba(16, 185, 129, 0.14);
+}
+
+.card.card-medium:hover,
+.card.card-medium:focus-within {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 16px 36px -8px rgba(245, 158, 11, 0.22), 0 4px 12px -2px rgba(245, 158, 11, 0.14);
+}
+
+.card.card-hard:hover,
+.card.card-hard:focus-within {
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 16px 36px -8px rgba(239, 68, 68, 0.22), 0 4px 12px -2px rgba(239, 68, 68, 0.14);
+}
+
+.card.card-gfi:hover,
+.card.card-gfi:focus-within {
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 16px 36px -8px rgba(59, 130, 246, 0.22), 0 4px 12px -2px rgba(59, 130, 246, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card {
+        transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
+    }
+
+    .card:hover,
+    .card:focus-within {
+        transform: none !important;
+    }
 }
 
 .card-header {

@@ -396,7 +396,7 @@ function renderProjects(projects) {
         const difficulty = project.difficulty || "Medium";
 
         const article = document.createElement('article');
-        article.className = 'card';
+        article.className = `card card-${difficulty.toLowerCase()}`;
 
         const header = document.createElement('div');
         header.className = 'card-header';
@@ -450,7 +450,7 @@ function renderIssues(issues, replace = true) {
 
     issues.forEach(issue => {
         const article = document.createElement('article');
-        article.className = 'card';
+        article.className = 'card card-gfi';
 
         const header = document.createElement('div');
         header.className = 'card-header';
