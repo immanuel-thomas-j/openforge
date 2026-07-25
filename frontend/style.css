@@ -30,6 +30,25 @@
     --radius-pill: 9999px;
 }
 
+[data-theme="dark"] {
+    --bg: #0a0a0a;
+    --surface: #171717;
+    --surface-strong: #262626;
+    --surface-muted: #1a1a1a;
+    --text: #ffffff;
+    --text-soft: #a3a3a3;
+    --border: #333333;
+    --primary: #ffffff;
+    --primary-deep: #f5f5f5;
+    --primary-soft: rgba(255, 255, 255, 0.1);
+    --secondary: #0a0a0a;
+
+    --accent-gradient: linear-gradient(135deg, #4b5563 0%, #111827 100%);
+    --primary-glow: 0 10px 20px -10px rgba(255, 255, 255, 0.4);
+    --shadow-lg: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px -4px rgba(0, 0, 0, 0.3);
+}
+
 /* ============================================================
    BASE
    ============================================================ */
@@ -68,6 +87,12 @@ body::before {
     -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1), transparent 60%);
     mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1), transparent 60%);
     opacity: 0.6;
+}
+
+[data-theme="dark"] body::before {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
 a {
@@ -144,6 +169,11 @@ main {
     background: rgba(255, 255, 255, 0.75);
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
+}
+
+[data-theme="dark"] .site-nav {
+    border-bottom: 1px solid rgba(51, 51, 51, 0.5);
+    background: rgba(10, 10, 10, 0.75);
 }
 
 .nav-container {
@@ -371,6 +401,28 @@ main {
 .stat:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+}
+
+.nav-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
+.theme-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.theme-btn:hover {
+    background: var(--primary-soft);
 }
 
 .stat-icon {
