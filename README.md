@@ -53,7 +53,7 @@ Community members can easily add their repositories to OpenForge to help beginne
 ## Tech Stack
 
 - **Frontend**: Static HTML / CSS / Vanilla JS (zero build complexity)
-- **Backend**: Python Flask + GitHub API integration
+- **Backend**: Python Flask + GitHub API integration (now reuses HTTP connections via a persistent `requests.Session` for better performance)
 - **Testing**: Python unittest suite
 - **Deployment**: Netlify (frontend) + Render (backend)
 
