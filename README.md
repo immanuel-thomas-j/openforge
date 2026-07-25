@@ -25,10 +25,12 @@ OpenForge was built to solve that friction—indexing 500+ hand-picked repositor
 | Feature | Benefit |
 |---------|---------|
 | **Curated projects** | Community-submitted, hand-vetted repos (not scraped noise) |
-| **Live GitHub lookups** | Real-time issues with 15-minute caching for speed |
+| **Distributed Redis Cache** | Real-time issues cached via Redis to prevent rate limiting with fallback |
+| **Smart Autocomplete** | Keyboard-navigable live suggestions for projects & technologies |
+| **Unified Dark Mode** | Premium, eye-friendly theme with SVG toggle icon & zero white flashes (FOUC) |
+| **Local Bookmarks** | Save favorite projects for later reference using safe browser local storage |
 | **Smart filtering** | Search by project, tech stack, tags, difficulty level |
 | **Safe rendering** | No XSS risk — all user content sanitized via DOM APIs |
-| **Production-ready** | Deployed on Netlify + Render with proper CORS & error handling |
 
 ## Screenshots
 
@@ -75,6 +77,7 @@ gunicorn backend.app:app --bind 0.0.0.0:5000
 
 **Environment variables** (optional `.env` file):
 - `GITHUB_TOKEN`: GitHub API token for higher rate limits (recommended).
+- `REDIS_URL`: Redis database connection string (e.g. `redis://localhost:6379`) to enable distributed caching.
 - `ALLOWED_ORIGIN`: Comma-separated CORS origins (default: all origins allowed).
 
 ### Frontend Setup
@@ -208,9 +211,8 @@ curl "http://127.0.0.1:5000/api/issues?query=documentation"
 | Limitation | Impact | Solution |
 |-----------|--------|----------|
 | Single JSON file storage | Not horizontally scalable | Replace with PostgreSQL (v2) |
-| 15-min cache TTL | Stale data during window | Redis for distributed caching |
 | No auth on POST | Anyone can submit projects | Add API key authentication (v2) |
-| In-memory cache | Lost on restart | Memcached for multi-instance setup |
+| Distributed Cache Fallback | Uses in-memory cache if Redis is down | Silently fallback to process memory |
 
 ## 🚀 Deployment
 
@@ -296,6 +298,24 @@ To run OpenForge locally:
 - **Python:** Follow PEP 8 guidelines.
 - **Frontend:** Semantic HTML5, Vanilla CSS for responsive layouts, and safe DOM APIs (avoid `innerHTML` with user inputs).
 - **Commits:** Follow Angular/Conventional Commits (e.g., `feat(ui): ...`, `fix(api): ...`).
+
+---
+
+## 👥 Contributors
+
+Thank you to all the contributors who have helped make OpenForge awesome!
+
+*   **Immanuel Thomas J** (`@immanuel-thomas-j`) — Maintainer & Creator
+*   **Diwakar Chaurasia** (`@Diwakar-odds`) — Dark Mode & Redis Caching
+*   **Priyasha Yadav** (`@Priyasha-Yadav`) — Autocomplete Dropdown Search
+*   **Lamiya** (`@lamiyacodes`) — Structured Page Footer
+*   **Harsh** (`@harsh160311`) — Local Bookmarks Feature
+*   **Revati Kadam** (`@revatikadam0607`) — Landing Page UI Adjustments
+*   **Jidnyasa Patil** (`@Jidnyasa-Patil`)
+*   **Kavya A Y** (`@Kavya-A-Y`)
+*   **Manisa Nayak** (`@Manisa-Nayak`)
+*   **Piush Gogi** (`@Piush-Gogi`)
+*   **Purvi Chopra** (`@Purvi-Chopra`)
 
 ---
 
