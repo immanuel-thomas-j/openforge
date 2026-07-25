@@ -21,20 +21,33 @@ function setupThemeToggle() {
     const themeToggle = document.getElementById("theme-toggle");
     if (!themeToggle) return;
     
+    const updateIcons = (theme) => {
+        const sunIcon = themeToggle.querySelector(".sun-icon");
+        const moonIcon = themeToggle.querySelector(".moon-icon");
+        if (sunIcon && moonIcon) {
+            if (theme === "dark") {
+                sunIcon.style.display = "block";
+                moonIcon.style.display = "none";
+            } else {
+                sunIcon.style.display = "none";
+                moonIcon.style.display = "block";
+            }
+        }
+    };
+
     const currentTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    
-    if (currentTheme === "dark") {
-        document.documentElement.setAttribute("data-theme", "dark");
-    }
+    updateIcons(currentTheme);
 
     themeToggle.addEventListener("click", () => {
-        let theme = document.documentElement.getAttribute("data-theme");
-        if (theme === "dark") {
+        const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+        if (isDark) {
             document.documentElement.removeAttribute("data-theme");
             localStorage.setItem("theme", "light");
+            updateIcons("light");
         } else {
             document.documentElement.setAttribute("data-theme", "dark");
             localStorage.setItem("theme", "dark");
+            updateIcons("dark");
         }
     });
 }
