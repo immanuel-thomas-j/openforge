@@ -2,12 +2,14 @@ import json
 import os
 import threading
 import time
+import logging
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 import requests
 from flask_cors import CORS
+import redis
 
 BACKEND_DIR = os.path.dirname(__file__)
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
@@ -26,8 +28,27 @@ GITHUB_ISSUE_SEARCH_URL = "https://api.github.com/search/issues"
 GITHUB_ISSUE_LABEL = 'label:"good first issue"'
 ISSUE_CACHE_TTL_SECONDS = 15 * 60
 DATA_LOCK = threading.RLock()
+
+# Initialize Redis Cache
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    try:
+        redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+        redis_client.ping()
+        logging.info("Connected to Redis successfully.")
+    except Exception as e:
+        logging.error(f"Failed to connect to Redis: {e}")
+        redis_client = None
+else:
+    redis_client = None
+
+# Fallback in-memory cache if Redis is unavailable
 ISSUE_CACHE_LOCK = threading.Lock()
 ISSUE_CACHE = {}
+
+# Reuse a persistent HTTP session for GitHub API calls (connection pooling / keep-alive)
+_github_session = requests.Session()
+_github_session.headers.update({"Accept": "application/vnd.github.v3+json"})
 
 
 def _default_data():
@@ -197,7 +218,8 @@ def _build_issue_query(repo_slug, search_term=""):
 
 
 def _github_request_headers():
-    headers = {"Accept": "application/vnd.github.v3+json"}
+    """Return per-request headers (Authorization may change at runtime)."""
+    headers = {}
     github_token = os.getenv("GITHUB_TOKEN", "").strip()
 
     if github_token:
@@ -207,6 +229,18 @@ def _github_request_headers():
 
 
 def _get_cached_issues(cache_key):
+    if redis_client:
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                entry = json.loads(cached_data)
+                if time.time() > entry.get("expires_at", 0):
+                    return None
+                return entry.get("issues")
+            return None
+        except Exception as e:
+            logging.error(f"Redis get error: {e}")
+
     with ISSUE_CACHE_LOCK:
         cached = ISSUE_CACHE.get(cache_key)
         if not cached:
@@ -219,11 +253,33 @@ def _get_cached_issues(cache_key):
 
 
 def _get_issue_cache_entry(cache_key):
+    if redis_client:
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                entry = json.loads(cached_data)
+                return {"issues": entry.get("issues"), "expires_at": entry.get("expires_at")}
+            return None
+        except Exception as e:
+            logging.error(f"Redis get error: {e}")
+
     with ISSUE_CACHE_LOCK:
         return ISSUE_CACHE.get(cache_key)
 
 
 def _set_cached_issues(cache_key, issues):
+    if redis_client:
+        try:
+            entry = {
+                "issues": issues,
+                "expires_at": time.time() + ISSUE_CACHE_TTL_SECONDS
+            }
+            # Keep key in Redis for up to 24 hours to support stale cache fallback
+            redis_client.setex(cache_key, 24 * 60 * 60, json.dumps(entry))
+            return
+        except Exception as e:
+            logging.error(f"Redis set error: {e}")
+
     with ISSUE_CACHE_LOCK:
         ISSUE_CACHE[cache_key] = {
             "issues": issues,
@@ -232,12 +288,19 @@ def _set_cached_issues(cache_key, issues):
 
 
 def _clear_issue_cache():
+    if redis_client:
+        try:
+            redis_client.flushdb()
+            return
+        except Exception as e:
+            logging.error(f"Redis flush error: {e}")
+
     with ISSUE_CACHE_LOCK:
         ISSUE_CACHE.clear()
 
 
 def _fetch_repo_issues(repo_slug, search_term=""):
-    response = requests.get(
+    response = _github_session.get(
         GITHUB_ISSUE_SEARCH_URL,
         params={
             "q": _build_issue_query(repo_slug, search_term),
