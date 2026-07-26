@@ -360,6 +360,54 @@ def add_project():
     return jsonify({"message": "Project added successfully!", "project": project}), 201
 
 
+@app.route("/api/projects/<int:project_id>", methods=["PUT"])
+def update_project(project_id):
+    payload = request.get_json(silent=True) or {}
+    
+    project_data, errors = _validate_project_payload(payload)
+    if errors:
+        return jsonify({"error": "Validation failed.", "fields": errors}), 400
+    
+    with DATA_LOCK:
+        data = read_data()
+        for project in data["projects"]:
+            if project["id"] == project_id:
+                project["name"] = project_data["name"]
+                project["description"] = project_data["description"]
+                project["githubUrl"] = project_data["githubUrl"]
+                project["tags"] = project_data["tags"]
+                project["difficulty"] = project_data["difficulty"]
+                
+                write_data(data)
+                
+                return jsonify({
+                    "message": "Project updated successfully!",
+                    "project": project
+                }), 200
+                
+                
+    return jsonify({"error": "Project not found"}), 404
+        
+                    
+@app.route("/api/projects/<int:project_id>", methods=["DELETE"])
+def delete_project(project_id):   
+        with DATA_LOCK:
+            data = read_data()
+            for project in data["projects"]:
+                if project["id"] == project_id:
+                    data["projects"].remove(project)
+                    write_data(data)
+                    
+                    return jsonify({
+                        "message": "Project deleted successfully!",
+                        "project": project
+                    }), 200
+                    
+                    
+        return jsonify({"error": "Project not found"}), 404
+
+
+
 @app.route("/api/issues", methods=["GET"])
 def get_issues():
     search_term = request.args.get("query", "").strip()
