@@ -29,6 +29,12 @@ GITHUB_ISSUE_LABEL = 'label:"good first issue"'
 ISSUE_CACHE_TTL_SECONDS = 15 * 60
 DATA_LOCK = threading.RLock()
 
+
+class AllIssueSourcesFailedError(Exception):
+    """Raised when every GitHub issue fetch attempt fails and no cached data is available."""
+    pass
+
+
 # Initialize Redis Cache
 REDIS_URL = os.environ.get("REDIS_URL")
 if REDIS_URL:
@@ -359,7 +365,7 @@ def _collect_live_issues(search_term=""):
         try:
             repo_issues = _fetch_repo_issues(repo_slug, search_term)
         except requests.exceptions.RequestException as error:
-            print(f"GitHub API Error for {repo_slug}: {error}")
+            logging.error(f"GitHub API Error for {repo_slug}: {error}")
             continue
 
         had_successful_request = True
@@ -379,8 +385,15 @@ def _collect_live_issues(search_term=""):
 
     if had_successful_request:
         _set_cached_issues(cache_key, [])
+        return live_issues
 
-    return live_issues
+    # Every single repo request failed (e.g. GitHub rate limit or network
+    # issue) and there is no cached data to fall back on. Returning an
+    # empty list here would be indistinguishable from "genuinely no
+    # matching issues", so surface this as a real failure instead.
+    raise AllIssueSourcesFailedError(
+        f"All {len(repo_slugs)} GitHub issue requests failed with no cached fallback available."
+    )
 
 
 @app.route("/api/projects", methods=["GET"])
@@ -430,8 +443,11 @@ def get_issues():
     try:
         live_issues = _collect_live_issues(search_term)
         return jsonify(live_issues)
+    except AllIssueSourcesFailedError as error:
+        logging.error(f"GitHub API Error: {error}")
+        return jsonify({"error": "Could not fetch live issues from GitHub right now. Please try again shortly."}), 503
     except requests.exceptions.RequestException as error:
-        print(f"GitHub API Error: {error}")
+        logging.error(f"GitHub API Error: {error}")
         return jsonify({"error": "Could not fetch live issues from GitHub at this time."}), 500
 
 
