@@ -6,6 +6,9 @@ let allIssues = [];
 let currentIssuePage = 1;
 const ISSUES_PER_PAGE = 12;
 
+// Delay before showing a cold-start hint while the free-tier backend wakes up
+const COLD_START_DELAY_MS = 4000;
+
 // Global State for Autocomplete (client-side only, reuses existing /projects data)
 let heroSearchIndex = null;
 let projectSearchIndex = null;
@@ -227,10 +230,25 @@ function setupProjectPage() {
         });
     }
 
+    renderStatusPanel(container, {
+        title: "Loading projects",
+        message: "Fetching curated repositories from OpenForge...",
+        loading: true,
+    });
+
+    const initialLoadTimer = window.setTimeout(() => {
+        renderStatusPanel(container, {
+            title: "Loading projects",
+            message: "Waking up the server - this can take up to 40 seconds on the first load.",
+            loading: true,
+        });
+    }, COLD_START_DELAY_MS);
+
     loadProjectFilters().then(() => {
+        window.clearTimeout(initialLoadTimer);
         const params = new URLSearchParams(window.location.search);
         if (search && params.get("query")) {
-            search.value = params.get("query");
+          search.value = params.get("query");
         }
 
         updateActiveFiltersSummary();
@@ -924,6 +942,14 @@ async function fetchProjects() {
 
     renderProjectSkeletons(container);
 
+    const coldStartTimer = window.setTimeout(() => {
+        renderStatusPanel(container, {
+            title: "Loading projects",
+            message: "Waking up the server - this can take up to 40 seconds on the first load.",
+            loading: true,
+        });
+    }, COLD_START_DELAY_MS);
+
     try {
         const filters = getProjectFilters();
         const params = new URLSearchParams();
@@ -947,6 +973,8 @@ async function fetchProjects() {
             message: "Make sure the Flask backend is running on https://openforge-48r0.onrender.com.",
             variant: "is-error",
         });
+    } finally {
+        window.clearTimeout(coldStartTimer);
     }
 }
 
@@ -973,6 +1001,14 @@ async function fetchIssues() {
     //me
 
     renderIssueSkeletons(container);
+
+    const coldStartTimer = window.setTimeout(() => {
+        renderStatusPanel(container, {
+            title: "Loading issues",
+            message: "Waking up the server - this can take up to 40 seconds on the first load.",
+            loading: true,
+        });
+    }, COLD_START_DELAY_MS);
 
     try {
         const params = new URLSearchParams();
@@ -1009,6 +1045,8 @@ async function fetchIssues() {
             message: "GitHub may be unavailable or the rate limit was exceeded. Try again shortly.",
             variant: "is-error",
         });
+    } finally {
+        window.clearTimeout(coldStartTimer);
     }
 }
 
