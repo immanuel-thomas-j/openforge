@@ -13,6 +13,7 @@ let projectSearchIndex = null;
 document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
     setupProjectPage();
+    setupProjectDetailsPage();
     setupIssuePage();
     setupAddProjectForm();
     setupHeroSearch();
@@ -428,10 +429,8 @@ function renderProjects(projects) {
         actions.className = 'card-actions';
         const link = document.createElement('a');
         link.className = 'btn btn-primary';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.href = project.githubUrl || '#';
-        link.textContent = 'View on GitHub';
+        link.href = `project.html?id=${project.id}`;
+        link.textContent = 'View Details';
         actions.appendChild(link);
         article.appendChild(actions);
 
@@ -1077,4 +1076,272 @@ async function submitProject(event) {
     } finally {
         if (submitButton) submitButton.disabled = false;
     }
+}
+
+// ============================================================
+// PROJECT DETAILS PAGE ENGINE
+// ============================================================
+
+async function setupProjectDetailsPage() {
+    const container = document.getElementById("project-details-container");
+    if (!container) return; // Only runs on project.html
+
+    const params = new URLSearchParams(window.location.search);
+    const projectId = parseInt(params.get("id"), 10);
+
+    if (!projectId) {
+        renderStatusPanel(container, {
+            title: "Invalid Project",
+            message: "No project ID provided in the URL.",
+            variant: "is-error"
+        });
+        return;
+    }
+
+    try {
+        // 1. Fetch the project list to find our specific project
+        const response = await fetch(`${API_URL}/projects`);
+        const projects = await response.json();
+        
+        if (!response.ok || !Array.isArray(projects)) {
+            throw new Error("Failed to load project database.");
+        }
+
+        const project = projects.find(p => p.id === projectId);
+        if (!project) {
+            renderStatusPanel(container, {
+                title: "Project Not Found",
+                message: "The requested project does not exist or has been removed.",
+                variant: "is-error"
+            });
+            return;
+        }
+
+        document.title = `OpenForge | ${project.name}`;
+
+        // 2. Try to get owner/repo for GitHub API calls
+        let owner = "";
+        let repo = "";
+        try {
+            const urlObj = new URL(project.githubUrl);
+            const parts = urlObj.pathname.split("/").filter(Boolean);
+            if (parts.length >= 2) {
+                owner = parts[0];
+                repo = parts[1].replace(".git", "");
+            }
+        } catch (e) {}
+
+        let githubData = null;
+        let repoIssues = [];
+
+        // 3. Fetch live GitHub stats client-side to prevent backend changes
+        if (owner && repo) {
+            try {
+                const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+                if (ghRes.ok) {
+                    githubData = await ghRes.json();
+                }
+            } catch (e) {
+                console.error("GitHub API fetch failed:", e);
+            }
+
+            // 4. Reuse existing backend issues endpoint and filter locally
+            try {
+                // The backend /api/issues endpoint expects query to search
+                // To get all issues, we can just fetch /api/issues
+                // We fetch issues and filter by repoLink
+                const issuesRes = await fetch(`${API_URL}/issues`);
+                const allFetchedIssues = await issuesRes.json();
+                if (issuesRes.ok && Array.isArray(allFetchedIssues)) {
+                    repoIssues = allFetchedIssues.filter(i => {
+                        return i.repoLink && i.repoLink.toLowerCase().includes(`${owner.toLowerCase()}/${repo.toLowerCase()}`);
+                    });
+                }
+            } catch (e) {
+                console.error("Issues fetch failed:", e);
+            }
+        }
+
+        // 5. Fetch README HTML
+        let readmeHtml = null;
+        if (owner && repo) {
+            try {
+                const readmeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+                    headers: { "Accept": "application/vnd.github.v3.html" }
+                });
+                if (readmeRes.ok) {
+                    readmeHtml = await readmeRes.text();
+                }
+            } catch (e) {
+                console.error("README fetch failed:", e);
+            }
+        }
+
+        // 6. Render the UI
+        renderProjectDetails(container, project, githubData, repoIssues, readmeHtml);
+
+    } catch (error) {
+        console.error("Error setting up project details:", error);
+        renderStatusPanel(container, {
+            title: "Unable to load project",
+            message: "There was a problem communicating with the server.",
+            variant: "is-error"
+        });
+    }
+}
+
+function renderProjectDetails(container, project, ghData, issues, readmeHtml) {
+    setContainerBusy(container, false);
+    
+    // Parse GitHub Stats safely
+    const stars = ghData ? ghData.stargazers_count : "N/A";
+    const forks = ghData ? ghData.forks_count : "N/A";
+    const watchers = ghData ? ghData.subscribers_count : "N/A";
+    const openIssuesCount = ghData ? ghData.open_issues_count : "N/A";
+    const language = ghData ? ghData.language : "N/A";
+    const license = (ghData && ghData.license) ? ghData.license.name : "N/A";
+    const homepage = (ghData && ghData.homepage) ? ghData.homepage : "";
+    const ghTopics = (ghData && ghData.topics) ? ghData.topics : [];
+    const avatarUrl = ghData && ghData.owner ? ghData.owner.avatar_url : "";
+    const ownerName = ghData && ghData.owner ? ghData.owner.login : "GitHub User";
+    const repoVisibility = ghData ? ghData.visibility : "Public";
+    const updatedAt = ghData ? new Date(ghData.updated_at).toLocaleDateString() : "N/A";
+    
+    // Fallback for tags/topics
+    const allTopics = [...new Set([...(project.tags || []), ...ghTopics])];
+
+    const difficultyClass = project.difficulty ? project.difficulty.toLowerCase() : "medium";
+
+    container.innerHTML = `
+        <div class="project-details-grid">
+            
+            <header class="project-details-header">
+                <div class="header-inner">
+                    ${avatarUrl ? `<img src="${avatarUrl}" alt="${ownerName}" class="project-avatar">` : ''}
+                    <div class="header-content">
+                        <div class="header-badges">
+                            <span class="badge badge-${difficultyClass}">${project.difficulty || "Medium"}</span>
+                            <span class="badge badge-visibility">${repoVisibility}</span>
+                        </div>
+                        <h1 class="project-title">${project.name}</h1>
+                        <p class="project-description">${ghData?.description || project.description}</p>
+                        <div class="header-actions">
+                            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                                View on GitHub
+                            </a>
+                            ${homepage ? `<a href="${homepage}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Homepage</a>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="project-content">
+                
+                <div class="main-column">
+                    <section class="card content-section">
+                        <h2>About</h2>
+                        <p class="about-text">${project.description}</p>
+                        
+                        <div class="topics-section">
+                            <h3>Technologies & Topics</h3>
+                            <div class="tag-container">
+                                ${allTopics.length > 0 ? allTopics.map(t => `<span class="tag">${t}</span>`).join('') : '<span class="text-muted">No topics available</span>'}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card content-section" id="readme-section">
+                        <h2>README Preview</h2>
+                        <div class="readme-content">
+                            ${readmeHtml ? 
+                                `<div class="markdown-body" style="font-size: 0.95rem; line-height: 1.6; word-wrap: break-word;">${readmeHtml}</div>` : 
+                                `<div class="readme-placeholder">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" class="readme-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <h3>README Preview Not Available</h3>
+                                    <p>Unable to load the repository README.</p>
+                                    <a href="${project.githubUrl}#readme" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Read on GitHub</a>
+                                </div>`
+                            }
+                        </div>
+                    </section>
+                </div>
+
+                <div class="sidebar-column">
+                    
+                    <section class="card sidebar-section">
+                        <h3>Repository Stats</h3>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">Stars</span>
+                                <strong class="stat-value">${stars}</strong>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Forks</span>
+                                <strong class="stat-value">${forks}</strong>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Watchers</span>
+                                <strong class="stat-value">${watchers}</strong>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Open Issues</span>
+                                <strong class="stat-value">${openIssuesCount}</strong>
+                            </div>
+                        </div>
+                        <ul class="meta-list">
+                            <li>
+                                <span class="meta-label">Language</span>
+                                <strong>${language}</strong>
+                            </li>
+                            <li>
+                                <span class="meta-label">License</span>
+                                <strong>${license}</strong>
+                            </li>
+                            <li>
+                                <span class="meta-label">Last Updated</span>
+                                <strong>${updatedAt}</strong>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="card sidebar-section">
+                        <h3 class="sidebar-header">
+                            Good First Issues
+                            <span class="badge badge-easy">${issues.length}</span>
+                        </h3>
+                        
+                        <div class="issues-list">
+                            ${issues.length === 0 ? 
+                                '<p class="text-muted">No good first issues found currently. Check back later!</p>' : 
+                                issues.slice(0, 5).map(issue => `
+                                    <a href="${issue.issueLink}" target="_blank" rel="noopener noreferrer" class="issue-link">
+                                        <h4>${issue.title}</h4>
+                                        <span class="badge badge-easy">Good First Issue</span>
+                                    </a>
+                                `).join('')
+                            }
+                        </div>
+                        
+                        ${issues.length > 5 ? `
+                            <a href="${project.githubUrl}/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22" target="_blank" rel="noopener noreferrer" class="btn btn-secondary view-all-btn">View All on GitHub</a>
+                        ` : ''}
+                    </section>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Make the issue links interactive
+    const issueLinks = container.querySelectorAll('.sidebar-column a[href*="issues/"]');
+    issueLinks.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            link.style.borderColor = 'var(--primary)';
+            link.style.background = 'var(--surface)';
+        });
+        link.addEventListener('mouseleave', () => {
+            link.style.borderColor = 'var(--border)';
+            link.style.background = 'var(--surface-strong)';
+        });
+    });
 }

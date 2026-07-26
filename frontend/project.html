@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="OpenForge helps beginners discover curated open-source projects and good-first issues to make their first contribution.">
-    <title>OpenForge | Home</title>
+    <meta name="description" content="View detailed project information, statistics, topics, and good first issues on OpenForge.">
+    <title>OpenForge | Project Details</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
     <script>
@@ -19,7 +19,6 @@
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- 1. THE NAVIGATION BAR (Restored to the very top) -->
     <nav class="site-nav" aria-label="Main navigation">
         <div class="nav-container">
             <a href="index.html" class="logo">
@@ -36,7 +35,7 @@
                 </svg>
             </button>
             <ul class="nav-links" id="primary-nav">
-                <li><a href="index.html" class="active" aria-current="page">Home</a></li>
+                <li><a href="index.html">Home</a></li>
                 <li><a href="explore.html">Explore Projects</a></li>
                 <li><a href="issues.html">Beginner Issues</a></li>
                 <li><a href="add.html" class="nav-btn">Add Project</a></li>
@@ -62,78 +61,21 @@
         </div>
     </nav>
 
-    <!-- 2. THE MAIN HERO SECTION -->
-    <main id="main-content" class="container hero">
+    <main id="main-content" class="container page-spacing max-width-xl">
+        <a href="javascript:history.back()" class="btn btn-secondary back-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Back
+        </a>
         
-        <!-- Hero Content (Centered Text & Search) -->
-        <div class="hero-content">
-            <a href="explore.html" class="hero-badge">
-                <span class="badge-dot"></span>
-                Now indexing 500+ beginner issues
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </a>
-
-            <h1>Your first open-source PR starts here.</h1>
-            <p>Search hand-picked, beginner-friendly projects and live issues.</p>
-
-            <div class="search-wrapper hero-search-wrapper" role="search" aria-label="Search projects">
-                <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="search" class="search-bar" id="hero-search" placeholder="Search React, Python, or 'Good First Issue'..." aria-label="Search projects">
-            </div>
-
-            <div class="hero-quick-links">
-                <span class="text-soft">Popular:</span>
-                <a href="explore.html?query=frontend" class="tag">Frontend</a>
-                <a href="explore.html?query=python" class="tag">Python</a>
-                <a href="issues.html" class="tag">Beginner Issues</a>
-            </div>
-        </div>
-
-        <!-- 3. THE STATS CARDS (Restored classes for cards and colors) -->
-        <div class="hero-stats" aria-label="OpenForge highlights">
-            <div class="stat">
-                <div class="stat-icon bg-blue" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <div class="stat-text">
-                    <strong>Curated</strong>
-                    <span>Beginner-friendly repositories only.</span>
-                </div>
-            </div>
-            <div class="stat">
-                <div class="stat-icon bg-green" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                </div>
-                <div class="stat-text">
-                    <strong>Live</strong>
-                    <span>GitHub issues pulled from active repos.</span>
-                </div>
-            </div>
-            <div class="stat">
-                <div class="stat-icon bg-purple" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                </div>
-                <div class="stat-text">
-                    <strong>Fast</strong>
-                    <span>Cached responses and instant filtering.</span>
-                </div>
+        <div id="project-details-container" aria-live="polite" aria-busy="true">
+            <div class="status-panel" role="status">
+                <div class="spinner" aria-hidden="true"></div>
+                <strong>Loading project details</strong>
+                <p>Fetching curated repository details from OpenForge...</p>
             </div>
         </div>
     </main>
 
-    <!-- 4. THE FOOTER -->
     <footer class="site-footer">
         <div class="footer-container">
             <span class="footer-brand">OpenForge</span>
