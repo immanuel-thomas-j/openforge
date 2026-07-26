@@ -1,5 +1,5 @@
 {
-  "next_project_id": 6,
+  "next_project_id": 16,
   "projects": [
     {
       "id": 1,
@@ -28,12 +28,13 @@
     {
       "id": 3,
       "name": "OpenForge",
-      "description": "The very platform you are looking at! Help us improve the open-source discovery experience.",
-      "githubUrl": "https://github.com/openforge-org/openforge",
+      "description": "Find beginner-friendly open-source issues fast. OpenForge indexes curated GitHub repositories and surfaces good first issues.",
+      "githubUrl": "https://github.com/immanuel-thomas-j/openforge",
       "tags": [
         "Python",
+        "Flask",
         "HTML/CSS",
-        "Hackathon"
+        "Vanilla JS"
       ],
       "difficulty": "Easy"
     },
@@ -60,6 +61,126 @@
         "AI"
       ],
       "difficulty": "Hard"
+    },
+    {
+      "id": 6,
+      "name": "Django",
+      "description": "The Web framework for perfectionists with deadlines. Built with Python.",
+      "githubUrl": "https://github.com/django/django",
+      "tags": [
+        "Python",
+        "Web",
+        "Framework"
+      ],
+      "difficulty": "Medium"
+    },
+    {
+      "id": 7,
+      "name": "VS Code",
+      "description": "Code editor for building and debugging modern web and cloud applications, built by Microsoft.",
+      "githubUrl": "https://github.com/microsoft/vscode",
+      "tags": [
+        "TypeScript",
+        "Electron",
+        "Editor"
+      ],
+      "difficulty": "Hard"
+    },
+    {
+      "id": 8,
+      "name": "Kubernetes",
+      "description": "Production-Grade Container Scheduling and Management. The industry standard container orchestrator.",
+      "githubUrl": "https://github.com/kubernetes/kubernetes",
+      "tags": [
+        "Go",
+        "Containers",
+        "DevOps"
+      ],
+      "difficulty": "Hard"
+    },
+    {
+      "id": 9,
+      "name": "Oh My Zsh",
+      "description": "A delightful, open source, community-driven framework for managing your zsh configuration.",
+      "githubUrl": "https://github.com/ohmyzsh/ohmyzsh",
+      "tags": [
+        "Shell",
+        "Zsh",
+        "Configuration"
+      ],
+      "difficulty": "Easy"
+    },
+    {
+      "id": 10,
+      "name": "Laravel",
+      "description": "A PHP web framework for web artisans, featuring an elegant and expressive syntax.",
+      "githubUrl": "https://github.com/laravel/laravel",
+      "tags": [
+        "PHP",
+        "Web",
+        "Framework"
+      ],
+      "difficulty": "Medium"
+    },
+    {
+      "id": 11,
+      "name": "Flutter",
+      "description": "Google's UI toolkit for crafting beautiful, natively compiled applications for mobile, web, and desktop.",
+      "githubUrl": "https://github.com/flutter/flutter",
+      "tags": [
+        "Dart",
+        "Mobile",
+        "Cross-Platform"
+      ],
+      "difficulty": "Hard"
+    },
+    {
+      "id": 12,
+      "name": "Awesome Python",
+      "description": "A curated list of awesome Python frameworks, libraries, software and resources.",
+      "githubUrl": "https://github.com/vinta/awesome-python",
+      "tags": [
+        "Python",
+        "Awesome-List",
+        "Resources"
+      ],
+      "difficulty": "Easy"
+    },
+    {
+      "id": 13,
+      "name": "Public APIs",
+      "description": "A collective list of free APIs for use in software and web development.",
+      "githubUrl": "https://github.com/public-apis/public-apis",
+      "tags": [
+        "API",
+        "Awesome-List",
+        "JSON"
+      ],
+      "difficulty": "Easy"
+    },
+    {
+      "id": 14,
+      "name": "React",
+      "description": "A declarative, efficient, and flexible JavaScript library for building user interfaces.",
+      "githubUrl": "https://github.com/facebook/react",
+      "tags": [
+        "JavaScript",
+        "UI",
+        "Frontend"
+      ],
+      "difficulty": "Hard"
+    },
+    {
+      "id": 15,
+      "name": "Webpack",
+      "description": "A bundler for javascript and friends. Packs many modules into a few bundled assets.",
+      "githubUrl": "https://github.com/webpack/webpack",
+      "tags": [
+        "JavaScript",
+        "Bundler",
+        "Tooling"
+      ],
+      "difficulty": "Hard"
     }
   ],
   "issues": [
@@ -80,6 +201,18 @@
       "title": "Fix broken image link in tutorial doc",
       "repoLink": "https://github.com/freeCodeCamp/freeCodeCamp",
       "issueLink": "https://github.com/freeCodeCamp/freeCodeCamp/issues/54321"
+    },
+    {
+      "id": 4,
+      "title": "Update documentation search layout z-index issue",
+      "repoLink": "https://github.com/immanuel-thomas-j/openforge",
+      "issueLink": "https://github.com/immanuel-thomas-j/openforge/issues/21"
+    },
+    {
+      "id": 5,
+      "title": "Add test case for caching fallback mechanisms",
+      "repoLink": "https://github.com/immanuel-thomas-j/openforge",
+      "issueLink": "https://github.com/immanuel-thomas-j/openforge/issues/31"
     }
   ]
 }
