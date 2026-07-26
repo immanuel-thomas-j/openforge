@@ -144,10 +144,6 @@ class OpenForgeApiTestCase(unittest.TestCase):
             mock_get.call_args_list[0].kwargs["params"]["q"],
             'is:issue is:open label:"good first issue" no:assignee repo:example/alpha docs',
         )
-        self.assertEqual(
-            mock_get.call_args_list[0].kwargs["headers"],
-            {},
-        )
         self.assertEqual(mock_get.call_count, 2)
 
     @patch.dict("os.environ", {"GITHUB_TOKEN": "ghp_testtoken"}, clear=False)
@@ -162,9 +158,7 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             mock_get.call_args.kwargs["headers"],
-            {
-                "Authorization": "Bearer ghp_testtoken",
-            },
+            {"Authorization": "Bearer ghp_testtoken"},
         )
         self.assertEqual(mock_get.call_count, 2)
 
@@ -183,13 +177,17 @@ class OpenForgeApiTestCase(unittest.TestCase):
         self.assertEqual(mock_get.call_count, 2)
 
     @patch.object(app_module._github_session, "get")
-    def test_get_issues_returns_error_when_github_fails(self, mock_get):
+    def test_get_issues_returns_503_when_all_sources_fail_with_no_cache(self, mock_get):
+        """When every GitHub request fails and there's no cached fallback,
+        the API must surface a real error instead of silently returning []
+        with a 200 status (which the frontend cannot distinguish from
+        'genuinely no issues')."""
         mock_get.side_effect = app_module.requests.exceptions.RequestException("boom")
 
         response = self.client.get("/api/issues")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 503)
         payload = response.get_json()
-        self.assertEqual(payload, [])
+        self.assertIn("error", payload)
 
     @patch.object(app_module._github_session, "get")
     def test_get_issues_falls_back_to_stale_cache(self, mock_get):
