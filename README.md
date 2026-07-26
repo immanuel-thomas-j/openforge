@@ -316,7 +316,6 @@ Thank you to all the contributors who have helped make OpenForge awesome!
 *   **Manisa Nayak** (`@Khushi1310-nayak`) — Mobile filter responsiveness fix and Project Details page implementation
 *   **Piush Gogi** (`@Piush-Gogi`) — XSS‑safe tag escaping
 *   **Purvi Chopra** (`@Purvi-Chopra`) — Loading skeletons UI
-*   **Yukta Ravindra Thakur** (`@Yukta062006`) — Connection pooling using persistent requests.Session() to optimize GitHub API requests
 
 
 ---
