@@ -301,24 +301,7 @@ To run OpenForge locally:
 
 ---
 
-## 👥 Contributors
 
-Thank you to all the contributors who have helped make OpenForge awesome!
-
-*   **Immanuel Thomas J** (`@immanuel-thomas-j`) — Maintainer & Creator
-*   **Diwakar Chaurasia** (`@Diwakar-odds`) — Dark Mode, Redis Caching, and client-side Issue pagination
-*   **Priyasha Yadav** (`@Priyasha-Yadav`) — Autocomplete Dropdown Search and custom responsive 404 page
-*   **Lamiya** (`@lamiyacodes`) — Structured Page Footer
-*   **Harsh** (`@harsh160311`) — Local Bookmarks Feature
-*   **Revati Kadam** (`@revatikadam0607`) — Landing Page UI Adjustments
-*   **Jidnyasa Patil** (`@Jidnyasa-Patil`) — Active filters summary UI
-*   **Kavya A Y** (`@Kavya-A-Y`) — Mobile search placeholder fix
-*   **Manisa Nayak** (`@Khushi1310-nayak`) — Mobile filter responsiveness fix and Project Details page implementation
-*   **Piush Gogi** (`@Piush-Gogi`) — XSS‑safe tag escaping
-*   **Purvi Chopra** (`@Purvi-Chopra`) — Loading skeletons UI
-
-
----
 
 ## 👥 Community & Etiquette
 We are dedicated to providing a welcoming, diverse, and safe environment for all contributors. Please review our [Code of Conduct](CODE_OF_CONDUCT.md) for details on expected behavior and reporting guidelines.
